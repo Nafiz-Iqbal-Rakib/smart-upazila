@@ -1,0 +1,11 @@
+export enum Department {
+  HEALTH = 'HEALTH',
+  ROAD = 'ROAD',
+  ELECTRICITY = 'ELECTRICITY',
+  WATER = 'WATER',
+  EDUCATION = 'EDUCATION',
+  AGRICULTURE = 'AGRICULTURE',
+  LAW_ORDER = 'LAW_ORDER',
+  OTHER = 'OTHER',
+}
+
