@@ -50,3 +50,28 @@ export class AuthService {
 
     const valid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!valid) throw new UnauthorizedException('ভুল নম্বর বা password');
+
+    if (!user.isApproved) {
+      throw new ForbiddenException('আপনার অ্যাকাউন্ট admin approval-এর অপেক্ষায় আছে');
+    }
+
+    if (!user.isActive) {
+      throw new ForbiddenException('আপনার অ্যাকাউন্ট block করা আছে');
+    }
+
+    return {
+      accessToken: this.jwt.sign({ sub: user.id, role: user.role }),
+      user: {
+        id: user.id,
+        name: user.name,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        department: user.department,
+      },
+    };
+  }
+
+  private signToken(userId: string, role: string) {
+    return { accessToken: this.jwt.sign({ sub: userId, role }) };
+  }
+}
