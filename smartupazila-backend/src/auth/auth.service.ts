@@ -24,3 +24,29 @@ export class AuthService {
 
     const nidExists = await this.userRepo.findOneBy({ nid: dto.nid });
     if (nidExists) throw new ConflictException('এই NID নম্বরে ইতোমধ্যে একটি অ্যাকাউন্ট আছে');
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const citizen = this.userRepo.create({
+      name: dto.name,
+      phoneNumber: dto.phoneNumber,
+      email: dto.email,
+      nid: dto.nid,
+      address: dto.address,
+      passwordHash,
+      role: Role.CITIZEN,
+      isApproved: false,
+      isActive: true,
+    });
+    await this.userRepo.save(citizen);
+
+    return {
+      message: 'নাগরিক রেজিস্ট্রেশন সফল হয়েছে! উপজেলা অ্যাডমিন অনুমোদন (Approval) দিলে লগইন করতে পারবেন।',
+    };
+  }
+
+  async login(dto: LoginDto) {
+    const user = await this.userRepo.findOneBy({ phoneNumber: dto.phoneNumber });
+    if (!user) throw new UnauthorizedException('ভুল নম্বর বা password');
+
+    const valid = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!valid) throw new UnauthorizedException('ভুল নম্বর বা password');
