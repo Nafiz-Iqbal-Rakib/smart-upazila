@@ -6,3 +6,10 @@ import { AppService } from './app.service.js';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'API হেলথ চেক ও সার্ভিস স্ট্যাটাস' })
+  getHello() {
+    return this.appService.getHello();
+  }
+}
