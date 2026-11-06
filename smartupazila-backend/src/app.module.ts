@@ -9,3 +9,14 @@ import { ComplaintsModule } from './complaints/complaints.module';
 import { EmergencyModule } from './emergency/emergency.module';
 import { BloodDonorsModule } from './blood-donors/blood-donors.module';
 import { FoodsModule } from './foods/foods.module';
+import { PlacesModule } from './places/places.module';
+import { CommunityModule } from './community/community.module';
+import { AiModule } from './ai/ai.module';
+import { AiRouterModule } from './ai/ai-router.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { UsersModule } from './users/users.module';
+import { NoticesModule } from './notices/notices.module';
+import { Notice } from './notices/notice.entity';
+
+import { User } from './users/user.entity';
+import { Complaint } from './complaints/complaint.entity';
