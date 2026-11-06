@@ -1,0 +1,11 @@
+import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
+import { AdminModule } from './admin/admin.module';
+import { ComplaintsModule } from './complaints/complaints.module';
+import { EmergencyModule } from './emergency/emergency.module';
+import { BloodDonorsModule } from './blood-donors/blood-donors.module';
+import { FoodsModule } from './foods/foods.module';
