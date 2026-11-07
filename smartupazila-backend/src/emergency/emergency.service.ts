@@ -12,3 +12,17 @@ export class EmergencyService {
   ) {}
 
   create(dto: CreateEmergencyContactDto) {
+    return this.repo.save(this.repo.create(dto));
+  }
+
+  findAll(category?: string, address?: string) {
+    return this.repo.find({
+      where: {
+        ...(category && { category: ILike(`%${category}%`) }),
+        ...(address && { address: ILike(`%${address}%`) }),
+      },
+      order: { serviceName: 'ASC' },
+    });
+  }
+}
+
