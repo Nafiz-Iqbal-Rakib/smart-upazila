@@ -15,3 +15,20 @@ export class CreateBloodDonorDto {
   @ApiProperty({ example: '01712345678' })
   @Matches(/^01[3-9]\d{8}$/, { message: 'সঠিক ফোন নম্বর দিন' })
   phoneNumber: string;
+
+  @ApiProperty({ example: 'উপজেলা রোড, সদর' })
+  @IsString()
+  @IsNotEmpty()
+  address: string;
+
+  @ApiPropertyOptional({ default: true })
+  @IsOptional()
+  @IsBoolean()
+  isAvailable?: boolean;
+
+  @ApiPropertyOptional({ example: '2026-01-15' })
+  @IsOptional()
+  @IsDateString()
+  lastDonationDate?: string;
+}
+
