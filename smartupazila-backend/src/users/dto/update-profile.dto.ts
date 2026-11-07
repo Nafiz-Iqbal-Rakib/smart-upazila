@@ -15,3 +15,19 @@ export class UpdateProfileDto {
 
   @ApiPropertyOptional({ example: 'গ্রাম: চরপাড়া, ইউনিয়ন: সদর' })
   @IsOptional()
+  @IsString()
+  address?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg' })
+  @IsOptional()
+  @IsString()
+  avatarUrl?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'প্রোফাইল ছবি (ঐচ্ছিক - আপলোড করলে Cloudinary-তে সেভ হবে)',
+  })
+  @IsOptional()
+  avatar?: any;
+}
