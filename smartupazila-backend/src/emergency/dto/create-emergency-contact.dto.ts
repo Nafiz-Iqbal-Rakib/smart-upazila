@@ -11,3 +11,15 @@ export class CreateEmergencyContactDto {
   @IsString()
   @IsNotEmpty()
   category: string;
+
+  @ApiProperty({ example: '999' })
+  @IsString()
+  @IsNotEmpty()
+  phoneNumber: string;
+
+  @ApiProperty({ example: 'সারাদেশ' })
+  @IsString()
+  @IsNotEmpty()
+  address: string;
+}
+
