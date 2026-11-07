@@ -8,3 +8,13 @@ export class EmergencyContact {
   @Column()
   serviceName: string;
 
+  @Column() // Emergency / Police / Hospital / Fire / Administration
+  category: string;
+
+  @Column()
+  phoneNumber: string;
+
+  @Column()
+  address: string;
+}
+
