@@ -1,0 +1,17 @@
+import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+
+export class UpdateProfileDto {
+  @ApiPropertyOptional({ example: 'মোঃ তানভীর আহমেদ' })
+  @IsOptional()
+  @IsString()
+  @MinLength(2, { message: 'নাম অন্তত ২ অক্ষরের হতে হবে' })
+  name?: string;
+
+  @ApiPropertyOptional({ example: 'citizen@example.com' })
+  @IsOptional()
+  @IsEmail({}, { message: 'সঠিক ইমেইল ঠিকানা দিন' })
+  email?: string;
+
+  @ApiPropertyOptional({ example: 'গ্রাম: চরপাড়া, ইউনিয়ন: সদর' })
+  @IsOptional()
