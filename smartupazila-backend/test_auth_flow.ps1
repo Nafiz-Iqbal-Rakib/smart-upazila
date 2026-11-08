@@ -51,3 +51,56 @@ try {
     Invoke-RestMethod -Uri "$baseUrl/auth/register" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($regBody)) -ContentType "application/json; charset=utf-8"
     Write-Host " FAIL: Duplicate registration allowed!" -ForegroundColor Red
 } catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Assert-Equal $statusCode 409 "Duplicate phoneNumber returns 409 Conflict"
+}
+
+# Invalid NID (less than 10 digits)
+$badNidBody = @{
+    name = "টেস্ট"
+    phoneNumber = "01899999999"
+    email = "badnid@test.com"
+    nid = "12345"
+    address = "ঢাকা"
+    password = "password123"
+} | ConvertTo-Json -Depth 5
+
+try {
+    Invoke-RestMethod -Uri "$baseUrl/auth/register" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($badNidBody)) -ContentType "application/json; charset=utf-8"
+    Write-Host " FAIL: Invalid NID was accepted!" -ForegroundColor Red
+} catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Assert-Equal $statusCode 400 "Invalid NID returns 400 Bad Request"
+}
+
+Write-Host "`n=== TEST 4: Unauthorized User cannot create staff (401 / 403) ===" -ForegroundColor Cyan
+$staffBody = @{
+    name = "নতুন ইঞ্জিনিয়ার"
+    phoneNumber = "01788888888"
+    role = "OFFICER"
+    department = "WATER"
+    password = "password123"
+} | ConvertTo-Json -Depth 5
+
+try {
+    Invoke-RestMethod -Uri "$baseUrl/admin/users" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($staffBody)) -ContentType "application/json; charset=utf-8"
+    Write-Host " FAIL: Unauthenticated user was able to hit /admin/users!" -ForegroundColor Red
+} catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Assert-Equal $statusCode 401 "Unauthenticated POST /admin/users returns 401"
+}
+
+Write-Host "`n=== TEST 5: Admin Login and Staff Creation ===" -ForegroundColor Cyan
+$adminLogin = @{
+    phoneNumber = "01700000000"
+    password = "admin123"
+} | ConvertTo-Json -Depth 5
+
+$adminAuth = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($adminLogin)) -ContentType "application/json; charset=utf-8"
+$adminToken = $adminAuth.access_token
+Write-Host " Admin logged in successfully! Role: $($adminAuth.user.role)" -ForegroundColor Green
+
+$headers = @{
+    Authorization = "Bearer $adminToken"
+}
+
