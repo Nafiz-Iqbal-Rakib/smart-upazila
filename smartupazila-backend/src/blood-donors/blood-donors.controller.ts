@@ -45,3 +45,26 @@ export class BloodDonorsController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'নির্দিষ্ট blood donor-এর তথ্য দেখো (public)' })
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.findOne(id);
+  }
+
+  @Patch(':id/availability')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MODERATOR)
+  @ApiOperation({ summary: 'ডোনারের প্রাপ্যতা পরিবর্তন করো (admin/moderator)' })
+  toggle(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.toggleAvailability(id);
+  }
+
+  @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MODERATOR)
+  @ApiOperation({ summary: 'রক্তদাতার তথ্য মুছে ফেলো (admin/moderator)' })
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.remove(id);
+  }
+}
