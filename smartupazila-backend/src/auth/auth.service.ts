@@ -17,3 +17,23 @@ export class AuthService {
 
   async register(dto: RegisterDto) {
     const phoneExists = await this.userRepo.findOneBy({ phoneNumber: dto.phoneNumber });
+    if (phoneExists) throw new ConflictException('এই মোবাইল নম্বরে ইতোমধ্যে একটি অ্যাকাউন্ট আছে');
+
+    const emailExists = await this.userRepo.findOneBy({ email: dto.email });
+    if (emailExists) throw new ConflictException('এই ইমেইলে ইতোমধ্যে একটি অ্যাকাউন্ট আছে');
+
+    const nidExists = await this.userRepo.findOneBy({ nid: dto.nid });
+    if (nidExists) throw new ConflictException('এই NID নম্বরে ইতোমধ্যে একটি অ্যাকাউন্ট আছে');
+
+    const passwordHash = await bcrypt.hash(dto.password, 10);
+    const citizen = this.userRepo.create({
+      name: dto.name,
+      phoneNumber: dto.phoneNumber,
+      email: dto.email,
+      nid: dto.nid,
+      address: dto.address,
+      passwordHash,
+      role: Role.CITIZEN,
+      isApproved: false,
+      isActive: true,
+    });
