@@ -15,3 +15,20 @@ export class BloodDonorsService {
     const existing = await this.repo.findOneBy({ phoneNumber: dto.phoneNumber });
     if (existing) {
       throw new ConflictException('এই ফোন নম্বরে একজন ডোনার ইতোমধ্যে নিবন্ধিত আছেন');
+    }
+    return this.repo.save(this.repo.create(dto));
+  }
+
+  findAll(bloodGroup?: BloodGroup, address?: string) {
+    return this.repo.find({
+      where: {
+        isAvailable: true,
+        ...(bloodGroup && { bloodGroup }),
+        ...(address && { address: ILike(`%${address}%`) }),
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findOne(id: string) {
+    const donor = await this.repo.findOneBy({ id });
