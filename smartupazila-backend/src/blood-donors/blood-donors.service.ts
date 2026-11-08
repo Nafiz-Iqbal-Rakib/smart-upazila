@@ -32,3 +32,20 @@ export class BloodDonorsService {
 
   async findOne(id: string) {
     const donor = await this.repo.findOneBy({ id });
+    if (!donor) throw new NotFoundException('Donor পাওয়া যায়নি');
+    return donor;
+  }
+
+  async toggleAvailability(id: string) {
+    const donor = await this.repo.findOneBy({ id });
+    if (!donor) throw new NotFoundException('Donor পাওয়া যায়নি');
+    donor.isAvailable = !donor.isAvailable;
+    return this.repo.save(donor);
+  }
+
+  async remove(id: string) {
+    const donor = await this.findOne(id);
+    await this.repo.remove(donor);
+    return { success: true, message: 'রক্তদাতার তথ্য মুছে ফেলা হয়েছে' };
+  }
+}
