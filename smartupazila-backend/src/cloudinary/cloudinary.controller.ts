@@ -37,3 +37,22 @@ export class CloudinaryController {
       properties: {
         file: {
           type: 'string',
+          format: 'binary',
+          description: 'আপলোড করার ছবি ফাইল (JPG, PNG, WEBP)',
+        },
+      },
+      required: ['file'],
+    },
+  })
+  async uploadImage(@UploadedFile() file: Express.Multer.File) {
+    const result = await this.cloudinaryService.uploadImage(file, 'smartupazila/uploads');
+    return {
+      success: true,
+      message: 'ছবি সফলভাবে ক্লাউডে আপলোড হয়েছে',
+      url: result.secure_url,
+      publicId: result.public_id,
+      format: result.format,
+      bytes: result.bytes,
+    };
+  }
+}
