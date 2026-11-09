@@ -92,3 +92,34 @@ export class CloudinaryService {
   ): Promise<UploadApiResponse> {
     return this.uploadImage(file, folder, true);
   }
+
+  /**
+   * Generate a short-lived signed URL for an 'authenticated' private Cloudinary image
+   * @param publicId Cloudinary public_id
+   * @param expiresInSeconds Lifetime in seconds (default: 5 minutes)
+   */
+  getSignedImageUrl(publicId: string, expiresInSeconds: number = 300): string {
+    const expiresAt = Math.floor(Date.now() / 1000) + expiresInSeconds;
+    return cloudinary.url(publicId, {
+      type: 'authenticated',
+      resource_type: 'image',
+      sign_url: true,
+      secure: true,
+      expires_at: expiresAt,
+    });
+  }
+
+  /**
+   * Delete an image from Cloudinary by its public ID
+   */
+  async deleteImage(publicId: string, isPrivate: boolean = false): Promise<any> {
+    try {
+      return await cloudinary.uploader.destroy(publicId, {
+        resource_type: 'image',
+        type: isPrivate ? 'authenticated' : 'upload',
+      });
+    } catch (err: any) {
+      this.logger.warn(`Failed to delete Cloudinary image (${publicId}): ${err.message}`);
+    }
+  }
+}
