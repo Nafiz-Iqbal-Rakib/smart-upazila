@@ -30,3 +30,19 @@ export class FoodsService {
   async findOne(id: string) {
     const food = await this.repo.findOneBy({ id });
     if (!food) throw new NotFoundException('খাবারের তথ্য পাওয়া যায়নি');
+    return food;
+  }
+
+  async update(id: string, dto: UpdateFoodDto) {
+    const food = await this.findOne(id);
+    Object.assign(food, dto);
+    return this.repo.save(food);
+  }
+
+  async remove(id: string) {
+    const food = await this.findOne(id);
+    await this.repo.remove(food);
+    return { success: true, message: 'খাবারের আইটেম মুছে ফেলা হয়েছে' };
+  }
+}
+
