@@ -18,3 +18,23 @@ export class Place {
 
   @Column('text')
   description: string;
+
+  @Column({ type: 'enum', enum: PlaceCategory, default: PlaceCategory.OTHER })
+  category: PlaceCategory;
+
+  @Column()
+  address: string;
+
+  @Column({ nullable: true })
+  imageUrl: string;
+
+  @Column({ nullable: true })
+  entryFee: string; // যেমন: 'মুক্ত' / '২০ টাকা'
+
+  @Column({ nullable: true })
+  openingHours: string; // যেমন: 'সকাল ৯টা - সন্ধ্যা ৬টা'
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+
