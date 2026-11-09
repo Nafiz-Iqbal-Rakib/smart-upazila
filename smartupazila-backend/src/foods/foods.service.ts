@@ -14,3 +14,19 @@ export class FoodsService {
 
   create(dto: CreateFoodDto) {
     return this.repo.save(this.repo.create(dto));
+  }
+
+  findAll(category?: string, isAreaSpecial?: boolean, search?: string) {
+    return this.repo.find({
+      where: {
+        ...(category && { category: ILike(`%${category}%`) }),
+        ...(isAreaSpecial !== undefined && { isAreaSpecial }),
+        ...(search && { name: ILike(`%${search}%`) }),
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findOne(id: string) {
+    const food = await this.repo.findOneBy({ id });
+    if (!food) throw new NotFoundException('খাবারের তথ্য পাওয়া যায়নি');
