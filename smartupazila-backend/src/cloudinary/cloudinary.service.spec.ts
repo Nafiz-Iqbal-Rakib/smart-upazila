@@ -45,3 +45,26 @@ describe('CloudinaryService', () => {
     const url = service.getSignedImageUrl('smartupazila/complaints/sample', 300);
     expect(url).toContain('https://res.cloudinary.com/test_cloud/image/authenticated/');
     expect(url).toMatch(/s--[A-Za-z0-9_-]+--/);
+    expect(url).toContain('smartupazila/complaints/sample');
+  });
+
+  it('rejects non-image files', async () => {
+    const fakeFile = {
+      mimetype: 'application/pdf',
+      size: 1024,
+      buffer: Buffer.from('test'),
+    } as Express.Multer.File;
+
+    await expect(service.uploadPrivateImage(fakeFile)).rejects.toThrow(BadRequestException);
+  });
+
+  it('rejects image files larger than 5MB', async () => {
+    const oversizedFile = {
+      mimetype: 'image/png',
+      size: 6 * 1024 * 1024,
+      buffer: Buffer.alloc(16),
+    } as Express.Multer.File;
+
+    await expect(service.uploadPrivateImage(oversizedFile)).rejects.toThrow(BadRequestException);
+  });
+});
