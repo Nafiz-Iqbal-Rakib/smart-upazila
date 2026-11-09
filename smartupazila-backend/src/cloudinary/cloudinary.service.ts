@@ -61,3 +61,34 @@ export class CloudinaryService {
     return new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
+          folder,
+          resource_type: 'image',
+          type: isPrivate ? 'authenticated' : 'upload',
+        },
+        (error: UploadApiErrorResponse | undefined, result: UploadApiResponse | undefined) => {
+          if (error) {
+            this.logger.error('Cloudinary upload error:', error);
+            return reject(
+              new InternalServerErrorException(`ইমেজ আপলোড ব্যর্থ হয়েছে: ${error.message}`),
+            );
+          }
+          if (!result) {
+            return reject(new InternalServerErrorException('Cloudinary থেকে কোনো রেসপন্স পাওয়া যায়নি'));
+          }
+          resolve(result);
+        },
+      );
+
+      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+    });
+  }
+
+  /**
+   * Upload a private image ('authenticated') that cannot be accessed by a raw public URL
+   */
+  uploadPrivateImage(
+    file: Express.Multer.File,
+    folder: string = 'smartupazila/private',
+  ): Promise<UploadApiResponse> {
+    return this.uploadImage(file, folder, true);
+  }
