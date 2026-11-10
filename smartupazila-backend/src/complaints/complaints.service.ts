@@ -82,3 +82,45 @@ export class ComplaintsService {
       where: { user: { id: userId } },
       relations: { assignedTo: true, reviewedBy: true },
       select: {
+        id: true,
+        category: true,
+        department: true,
+        urgency: true,
+        description: true,
+        imageUrl: true,
+        imagePublicId: true,
+        status: true,
+        trackingId: true,
+        adminRemark: true,
+        createdAt: true,
+        updatedAt: true,
+        assignedTo: { id: true, name: true, department: true },
+        reviewedBy: { id: true, name: true, role: true },
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    return complaints.map((c) => this.withResolvedImageUrl(c, true));
+  }
+
+  async findByTrackingId(
+    trackingId: string,
+    requestingUser?: { userId: string; role: Role },
+  ) {
+    const complaint = await this.repo.findOne({
+      where: { trackingId },
+      relations: { user: true, assignedTo: true, reviewedBy: true },
+      select: {
+        id: true,
+        category: true,
+        department: true,
+        urgency: true,
+        description: true,
+        imageUrl: true,
+        imagePublicId: true,
+        status: true,
+        trackingId: true,
+        adminRemark: true,
+        createdAt: true,
+        updatedAt: true,
+        user: { id: true, name: true },
