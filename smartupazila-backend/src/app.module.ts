@@ -31,3 +31,15 @@ import { CommunityListing } from './community/community-listing.entity';
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        const databaseUrl = configService.get<string>('DATABASE_URL');
+        const dbSsl = configService.get<string>('DB_SSL');
+        const useSsl =
+          dbSsl === 'true' ||
+          Boolean(
+            databaseUrl &&
+              (databaseUrl.includes('neon.tech') || databaseUrl.includes('sslmode=require')),
+          );
+
+        return {
