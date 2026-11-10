@@ -8,3 +8,13 @@ export class CreateComplaintDto {
   @MaxLength(50)
   category: string;
 
+  @ApiProperty({ example: 'পাশের রাস্তায় ময়লা জমে জলাবদ্ধতা হচ্ছে', description: 'সমস্যার বিবরণ' })
+  @IsString()
+  @IsNotEmpty({ message: 'সমস্যার বিবরণ লিখুন' })
+  @MaxLength(2000)
+  description: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/waste.jpg', description: 'ছবির লিংক (ঐচ্ছিক)' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
