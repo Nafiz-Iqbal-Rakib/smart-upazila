@@ -57,3 +57,62 @@ $placeBody = @{
     openingHours = "সারাদিন খোলা"
     imageUrl = "https://res.cloudinary.com/hhj1x5qm/image/upload/v1794935457/smartupazila/places/mosque.jpg"
 } | ConvertTo-Json -Depth 5
+
+$placeRes = Invoke-RestMethod -Uri "$baseUrl/places" -Method Post -Headers $adminHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($placeBody)) -ContentType "application/json; charset=utf-8"
+Assert-Equal ($placeRes.id -ne $null) $true "Place created with ID: $($placeRes.id)"
+Assert-Equal $placeRes.name "ঐতিহাসিক পুরনো জামে মসজিদ $randomId" "Place name verified"
+
+Write-Host "`n=== TEST 4: Citizen Submits Complaint with Optional Image ===" -ForegroundColor Cyan
+# Register citizen
+$citizenPhone = ("016" + (Get-Random -Minimum 1000 -Maximum 9999) + "1234").Substring(0, 11)
+$citizenBody = @{
+    name = "করিম হোসেন"
+    phoneNumber = $citizenPhone
+    email = "citizen$randomId@test.com"
+    nid = ("199" + (Get-Random -Minimum 1000000 -Maximum 9999999)).Substring(0, 10)
+    address = "গ্রাম: মধ্যপাড়া"
+    password = "password123"
+} | ConvertTo-Json
+
+$reg = Invoke-RestMethod -Uri "$baseUrl/auth/register" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($citizenBody)) -ContentType "application/json; charset=utf-8"
+Write-Host " Citizen registered: $($reg.user.name)" -ForegroundColor Green
+
+# Approve citizen
+$approveRes = Invoke-RestMethod -Uri "$baseUrl/admin/users/$($reg.user.id)/approve" -Method Patch -Headers $adminHeaders
+Write-Host " Citizen approved by admin" -ForegroundColor Green
+
+# Login citizen
+$citizenAuth = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes((@{ phoneNumber = $citizenPhone; password = "password123" } | ConvertTo-Json))) -ContentType "application/json; charset=utf-8"
+$citizenHeaders = @{ Authorization = "Bearer $($citizenAuth.access_token)" }
+
+# Submit complaint
+$complaintBody = @{
+    category = "road"
+    description = "মেইন রোডের কালভার্ট ভেঙে গিয়ে যানবাহন চলাচল বন্ধ রয়েছে"
+    imageUrl = "https://res.cloudinary.com/hhj1x5qm/image/upload/v1794935457/smartupazila/complaints/broken_bridge.jpg"
+} | ConvertTo-Json
+
+$complaintRes = Invoke-RestMethod -Uri "$baseUrl/complaints" -Method Post -Headers $citizenHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($complaintBody)) -ContentType "application/json; charset=utf-8"
+$trackingId = $complaintRes.trackingId
+Assert-Equal ($trackingId -ne $null) $true "Complaint submitted, Tracking ID: $trackingId"
+Assert-Equal $complaintRes.department "ROAD" "AI Router successfully routed to ROAD department"
+
+Write-Host "`n=== TEST 5: Admin Updates Complaint Status with Official Remark ===" -ForegroundColor Cyan
+# Find complaint ID
+$allComplaints = Invoke-RestMethod -Uri "$baseUrl/admin/complaints" -Method Get -Headers $adminHeaders
+$targetComplaint = $allComplaints.items | Where-Object { $_.trackingId -eq $trackingId }
+
+$updateBody = @{
+    status = "IN_PROGRESS"
+    remark = "সড়ক ও জনপথ বিভাগের একটি ইঞ্জিনিয়ার টিম পরিদর্শন করেছে। সংস্কার কাজ শুরু হচ্ছে।"
+} | ConvertTo-Json
+
+$statusUpdateRes = Invoke-RestMethod -Uri "$baseUrl/admin/complaints/$($targetComplaint.id)/status" -Method Patch -Headers $adminHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($updateBody)) -ContentType "application/json; charset=utf-8"
+Assert-Equal $statusUpdateRes.status "IN_PROGRESS" "Complaint status changed to IN_PROGRESS"
+Assert-Equal $statusUpdateRes.adminRemark "সড়ক ও জনপথ বিভাগের একটি ইঞ্জিনিয়ার টিম পরিদর্শন করেছে। সংস্কার কাজ শুরু হচ্ছে।" "Official remark saved"
+
+Write-Host "`n=== TEST 6: Public Citizen Tracks Complaint by Tracking ID ===" -ForegroundColor Cyan
+$trackRes = Invoke-RestMethod -Uri "$baseUrl/complaints/track/$trackingId" -Method Get
+Assert-Equal $trackRes.trackingId $trackingId "Public track returned correct complaint"
+Assert-Equal $trackRes.status "IN_PROGRESS" "Public track shows current status IN_PROGRESS"
+Assert-Equal ($trackRes.adminRemark -ne $null) $true "Public track shows official remark: $($trackRes.adminRemark)"
