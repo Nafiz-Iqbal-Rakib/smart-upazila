@@ -30,3 +30,19 @@ export class PlacesService {
   async findOne(id: string) {
     const place = await this.repo.findOneBy({ id });
     if (!place) throw new NotFoundException('দর্শনীয় স্থান পাওয়া যায়নি');
+    return place;
+  }
+
+  async update(id: string, dto: UpdatePlaceDto) {
+    const place = await this.findOne(id);
+    Object.assign(place, dto);
+    return this.repo.save(place);
+  }
+
+  async remove(id: string) {
+    const place = await this.findOne(id);
+    await this.repo.remove(place);
+    return { success: true, message: 'স্থানটি মুছে ফেলা হয়েছে' };
+  }
+}
+
