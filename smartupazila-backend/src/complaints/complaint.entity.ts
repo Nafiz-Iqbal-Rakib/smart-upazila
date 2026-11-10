@@ -50,3 +50,29 @@ export class Complaint {
   @Column({ type: 'varchar', nullable: true })
   imagePublicId: string | null;
 
+  @Column({ type: 'enum', enum: Status, default: Status.PENDING })
+  status: Status;
+
+  @Column({ unique: true })
+  trackingId: string;
+
+  // কোন officer কে assign করা হয়েছে
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'assignedTo' })
+  assignedTo: User | null;
+
+  // কোন admin/officer complaint-টা review/update করেছে
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'reviewedBy' })
+  reviewedBy: User | null;
+
+  // অ্যাডমিন বা দায়িত্বপ্রাপ্ত কর্মকর্তার সমাধান মন্তব্য / প্রগ্রেস নোট
+  @Column({ type: 'text', nullable: true })
+  adminRemark: string | null;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}
