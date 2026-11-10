@@ -40,3 +40,45 @@ export class ComplaintsService {
       for (const officer of officers) {
         const count = await this.repo.count({
           where: {
+            assignedTo: { id: officer.id },
+            status: In([Status.PENDING, Status.IN_PROGRESS]),
+          },
+        });
+        if (count < minWorkload) {
+          minWorkload = count;
+          assignedOfficer = officer;
+        }
+      }
+    }
+
+    const complaint = this.repo.create({
+      category: dto.category,
+      description: dto.description,
+      imageUrl: imagePublicId ? null : dto.imageUrl || null,
+      imagePublicId: imagePublicId || null,
+      trackingId,
+      department: classification.department,
+      urgency: classification.urgency,
+      assignedTo: assignedOfficer,
+      user: { id: userId },
+    });
+
+    const saved = await this.repo.save(complaint);
+
+    return {
+      message: 'অভিযোগ জমা হয়েছে ✅',
+      trackingId: saved.trackingId,
+      status: saved.status,
+      department: saved.department,
+      urgency: saved.urgency,
+      assignedOfficer: assignedOfficer
+        ? `${assignedOfficer.name} (${saved.department} বিভাগ)`
+        : 'অপেক্ষারত (অ্যাডমিন পর্যালোচনা)',
+    };
+  }
+
+  async findMyComplaints(userId: string) {
+    const complaints = await this.repo.find({
+      where: { user: { id: userId } },
+      relations: { assignedTo: true, reviewedBy: true },
+      select: {
