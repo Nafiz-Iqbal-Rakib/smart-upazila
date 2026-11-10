@@ -14,3 +14,19 @@ export class CommunityService {
 
   create(dto: CreateCommunityListingDto) {
     return this.repo.save(this.repo.create(dto));
+  }
+
+  findAll(type?: ListingType, address?: string, search?: string) {
+    return this.repo.find({
+      where: {
+        ...(type && { type }),
+        ...(address && { address: ILike(`%${address}%`) }),
+        ...(search && { name: ILike(`%${search}%`) }),
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findOne(id: string) {
+    const item = await this.repo.findOneBy({ id });
+    if (!item) throw new NotFoundException('কমিউনিটি লিস্টিং পাওয়া যায়নি');
