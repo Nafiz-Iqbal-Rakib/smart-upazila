@@ -18,3 +18,12 @@ export class CreateComplaintDto {
   @IsOptional()
   @IsString()
   imageUrl?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'সমস্যার ছবি ফাইল (ঐচ্ছিক - ছবি আপলোড করলে Cloudinary-তে সেভ হবে)',
+  })
+  @IsOptional()
+  image?: any;
+}
