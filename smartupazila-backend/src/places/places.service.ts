@@ -14,3 +14,19 @@ export class PlacesService {
 
   create(dto: CreatePlaceDto) {
     return this.repo.save(this.repo.create(dto));
+  }
+
+  findAll(category?: PlaceCategory, address?: string, search?: string) {
+    return this.repo.find({
+      where: {
+        ...(category && { category }),
+        ...(address && { address: ILike(`%${address}%`) }),
+        ...(search && { name: ILike(`%${search}%`) }),
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findOne(id: string) {
+    const place = await this.repo.findOneBy({ id });
+    if (!place) throw new NotFoundException('দর্শনীয় স্থান পাওয়া যায়নি');
