@@ -52,3 +52,30 @@ export class CommunityController {
     @UploadedFile() file?: Express.Multer.File,
   ) {
     if (file) {
+      const uploadRes = await this.cloudinaryService.uploadImage(file, 'smartupazila/community');
+      dto.imageUrl = uploadRes.secure_url;
+    }
+    return this.service.create(dto);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'কমিউনিটি লিস্টিংয়ের তালিকা দেখো (public)' })
+  @ApiQuery({ name: 'type', required: false, enum: ListingType })
+  @ApiQuery({ name: 'address', required: false, type: String })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  findAll(
+    @Query('type') type?: ListingType,
+    @Query('address') address?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.service.findAll(type, address, search);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'নির্দিষ্ট লিস্টিংয়ের বিস্তারিত তথ্য দেখো (public)' })
+  findOne(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.findOne(id);
+  }
+
+  @Patch(':id')
+  @ApiBearerAuth()
