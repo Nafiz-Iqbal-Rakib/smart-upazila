@@ -79,3 +79,20 @@ Respond ONLY with valid JSON:
     // 1. Department keywords
     let department = Department.OTHER;
     if (
+      /রাস্তা|সড়ক|সড়কে|কালভার্ট|ব্রিজ|পুল|ভাঙা রাস্তা|গর্ত|রোড|হাইওয়ে|road|pothole|bridge|highway/i.test(
+        text,
+      )
+    ) {
+      department = Department.ROAD;
+    } else if (
+      /বিদ্যুৎ|কারেন্ট|লোডশেডিং|ট্রান্সফরমার|পোস্ট|তার|মিটার|electricity|power|transformer|blackout/i.test(
+        text,
+      )
+    ) {
+      department = Department.ELECTRICITY;
+    } else if (
+      /পানি|সুপেয় পানি|ড্রেন|জলাবদ্ধতা|নর্দমা|পয়ঃনিষ্কাশন|পানির লাইন|কল|টিউবওয়েল|drainage|water|flood|sewage/i.test(
+        text,
+      )
+    ) {
+      department = Department.WATER;
