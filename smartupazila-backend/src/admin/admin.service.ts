@@ -169,3 +169,89 @@ export class AdminService {
     const user = await this.userRepo.findOneBy({ id });
     if (!user) throw new NotFoundException('User পাওয়া যায়নি');
     user.isActive = isActive;
+    await this.userRepo.save(user);
+    return { message: isActive ? 'Unblock করা হয়েছে' : 'Block করা হয়েছে' };
+  }
+
+  async changeRole(id: string, adminId: string, role: Role, department?: Department) {
+    if (id === adminId) throw new BadRequestException('নিজের role বদলানো যাবে না');
+    const user = await this.userRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException('User পাওয়া যায়নি');
+    user.role = role;
+    if (role === Role.OFFICER && department) {
+      user.department = department;
+    } else if (role !== Role.OFFICER) {
+      user.department = null;
+    }
+    await this.userRepo.save(user);
+    return { message: `${user.name}-এর Role পরিবর্তন করে ${role} করা হয়েছে` };
+  }
+
+  async resetUserPassword(id: string, newPass: string) {
+    const user = await this.userRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException('User পাওয়া যায়নি');
+    user.passwordHash = await bcrypt.hash(newPass, 10);
+    await this.userRepo.save(user);
+    return {
+      success: true,
+      message: `ইউজার ${user.name} (${user.phoneNumber})-এর পাসওয়ার্ড সফলভাবে রিসেট করা হয়েছে`,
+    };
+  }
+
+  // 4. Complaints Management (Officer Department Isolation & Workload)
+  async findComplaints(q: ListComplaintsDto, requestingUser?: { userId: string; role: Role }) {
+    const limit = Math.min(q.limit || 20, 100);
+    const page = q.page || 1;
+
+    let departmentFilter: Department | undefined;
+    let assignedOfficerId: string | undefined;
+
+    if (requestingUser && requestingUser.role === Role.OFFICER) {
+      const officer = await this.userRepo.findOneBy({ id: requestingUser.userId });
+      if (officer) {
+        departmentFilter = officer.department || undefined;
+        assignedOfficerId = officer.id;
+      }
+    }
+
+    let whereCondition: any;
+    if (assignedOfficerId && departmentFilter) {
+      whereCondition = [
+        {
+          ...(q.status && { status: q.status }),
+          ...(q.category && { category: ILike(`%${q.category}%`) }),
+          department: departmentFilter,
+        },
+        {
+          ...(q.status && { status: q.status }),
+          ...(q.category && { category: ILike(`%${q.category}%`) }),
+          assignedTo: { id: assignedOfficerId },
+        },
+      ];
+    } else {
+      whereCondition = {
+        ...(q.status && { status: q.status }),
+        ...(q.category && { category: ILike(`%${q.category}%`) }),
+      };
+    }
+
+    const [items, total] = await this.complaintRepo.findAndCount({
+      where: whereCondition,
+      relations: {
+        user: true,
+        assignedTo: true,
+        reviewedBy: true,
+      },
+      select: {
+        id: true,
+        category: true,
+        department: true,
+        urgency: true,
+        description: true,
+        imageUrl: true,
+        imagePublicId: true,
+        status: true,
+        trackingId: true,
+        adminRemark: true,
+        createdAt: true,
+        updatedAt: true,
