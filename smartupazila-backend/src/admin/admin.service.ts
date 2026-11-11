@@ -83,3 +83,89 @@ export class AdminService {
       name: dto.name,
       phoneNumber: dto.phoneNumber,
       email: dto.email || null,
+      nid: dto.nid || null,
+      address: dto.address || null,
+      passwordHash,
+      role: dto.role,
+      department: dto.role === Role.OFFICER ? dto.department || Department.OTHER : null,
+      isApproved: true,
+      isActive: true,
+    });
+
+    const saved = await this.userRepo.save(staff);
+    return {
+      message: `${saved.name} (${saved.role}${saved.department ? ' - ' + saved.department : ''}) অ্যাকাউন্ট সফলভাবে তৈরি হয়েছে ✅`,
+      user: {
+        id: saved.id,
+        name: saved.name,
+        phoneNumber: saved.phoneNumber,
+        email: saved.email,
+        nid: saved.nid,
+        address: saved.address,
+        role: saved.role,
+        department: saved.department,
+        isApproved: saved.isApproved,
+        isActive: saved.isActive,
+      },
+    };
+  }
+
+  async approve(id: string) {
+    const user = await this.userRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException('User পাওয়া যায়নি');
+    user.isApproved = true;
+    await this.userRepo.save(user);
+    return { message: `${user.name}-এর অ্যাকাউন্ট approve হয়েছে ✅` };
+  }
+
+  async reject(id: string) {
+    const user = await this.userRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException('User পাওয়া যায়নি');
+    if (user.role === Role.ADMIN) throw new BadRequestException('Admin-কে reject করা যাবে না');
+    await this.userRepo.delete(id);
+    return { message: 'User reject করে মুছে ফেলা হয়েছে' };
+  }
+
+  // 2. All Users (Search & Pagination)
+  async findAllUsers(q: ListUsersDto) {
+    const limit = Math.min(q.limit || 20, 100);
+    const page = q.page || 1;
+
+    const whereConditions: any[] = [];
+    if (q.search) {
+      whereConditions.push(
+        { ...(q.role && { role: q.role }), name: ILike(`%${q.search}%`) },
+        { ...(q.role && { role: q.role }), phoneNumber: ILike(`%${q.search}%`) },
+      );
+    } else if (q.role) {
+      whereConditions.push({ role: q.role });
+    }
+
+    const [items, total] = await this.userRepo.findAndCount({
+      where: whereConditions.length > 0 ? whereConditions : {},
+      select: {
+        id: true,
+        name: true,
+        phoneNumber: true,
+        email: true,
+        nid: true,
+        address: true,
+        role: true,
+        department: true,
+        isApproved: true,
+        isActive: true,
+        createdAt: true,
+      },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  // 3. Block / Unblock & Role Change
+  async setActive(id: string, adminId: string, isActive: boolean) {
+    if (id === adminId) throw new BadRequestException('নিজেকে block/unblock করা যাবে না');
+    const user = await this.userRepo.findOneBy({ id });
+    if (!user) throw new NotFoundException('User পাওয়া যায়নি');
+    user.isActive = isActive;
