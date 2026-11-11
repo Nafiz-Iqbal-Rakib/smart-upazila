@@ -6,3 +6,6 @@ import { AiRouterService } from './ai-router.service';
   imports: [ConfigModule],
   providers: [AiRouterService],
   exports: [AiRouterService],
+})
+export class AiRouterModule {}
+
