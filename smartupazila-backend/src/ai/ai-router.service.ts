@@ -14,3 +14,19 @@ export class AiRouterService {
     description: string,
   ): Promise<{ department: Department; urgency: Urgency; confidence: string }> {
     const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+
+    if (apiKey) {
+      try {
+        const geminiResult = await this.classifyWithGemini(apiKey, category, description);
+        if (geminiResult) return geminiResult;
+      } catch (err: any) {
+        this.logger.warn(`Gemini classification failed (${err.message}), using rule-based router`);
+      }
+    }
+
+    return this.classifyWithRules(category, description);
+  }
+
+  private async classifyWithGemini(
+    apiKey: string,
+    category: string,
