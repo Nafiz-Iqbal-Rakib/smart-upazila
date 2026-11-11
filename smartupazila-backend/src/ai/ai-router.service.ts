@@ -112,3 +112,19 @@ Respond ONLY with valid JSON:
       /কৃষি|সার|বীজ|কীটনাশক|ধান|ফসল|সেচ|কৃষক|মাঠ|agriculture|fertilizer|farmer|crop/i.test(
         text,
       )
+    ) {
+      department = Department.AGRICULTURE;
+    } else if (
+      /পুলিশ|চুরি|ছিনতাই|ডাকাতি|মারামারি|ইভটিজিং|মাদক|জুয়া|নিরাপত্তা|crime|police|security|theft/i.test(
+        text,
+      )
+    ) {
+      department = Department.LAW_ORDER;
+    }
+
+    // 2. Urgency keywords
+    let urgency = Urgency.MEDIUM;
+    if (
+      /জরুরি|বিপদজনক|জীবননাশের|আগুন|দুর্ঘটনা|মারাত্মক|ধ্বসে|ভেঙে পড়ছে|ঝুঁকিপূর্ণ|death|danger|hazard|urgent|emergency/i.test(
+        text,
+      )
