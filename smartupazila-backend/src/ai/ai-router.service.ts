@@ -63,3 +63,19 @@ Respond ONLY with valid JSON:
     if (!text) return null;
 
     const parsed = JSON.parse(text);
+    return {
+      department: (Department as any)[parsed.department] || Department.OTHER,
+      urgency: (Urgency as any)[parsed.urgency] || Urgency.MEDIUM,
+      confidence: parsed.confidence || 'ai',
+    };
+  }
+
+  classifyWithRules(
+    category: string,
+    description: string,
+  ): { department: Department; urgency: Urgency; confidence: string } {
+    const text = `${category} ${description}`.toLowerCase();
+
+    // 1. Department keywords
+    let department = Department.OTHER;
+    if (
