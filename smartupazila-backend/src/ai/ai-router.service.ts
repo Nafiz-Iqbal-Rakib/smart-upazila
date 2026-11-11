@@ -128,3 +128,19 @@ Respond ONLY with valid JSON:
       /জরুরি|বিপদজনক|জীবননাশের|আগুন|দুর্ঘটনা|মারাত্মক|ধ্বসে|ভেঙে পড়ছে|ঝুঁকিপূর্ণ|death|danger|hazard|urgent|emergency/i.test(
         text,
       )
+    ) {
+      urgency = Urgency.EMERGENCY;
+    } else if (
+      /অনেক দিন ধরে|গুরুতর|বন্ধ হয়ে আছে|চরম দুর্ভোগ|অসহ্য|severe|critical/i.test(
+        text,
+      )
+    ) {
+      urgency = Urgency.HIGH;
+    } else if (/সাধারণ|পরামর্শ|তথ্য|minor|info/i.test(text)) {
+      urgency = Urgency.LOW;
+    }
+
+    return { department, urgency, confidence: 'rule-based' };
+  }
+}
+
