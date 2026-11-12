@@ -29,3 +29,35 @@ try {
     Write-Host " Registration successful: $($regRes.message)" -ForegroundColor Green
 } catch {
     Write-Host " Registration failed: $_" -ForegroundColor Red
+}
+
+Write-Host "`n=== TEST 2: Citizen Login Before Approval (Must be 403) ===" -ForegroundColor Cyan
+$loginBody = @{
+    phoneNumber = $citizenPhone
+    password = "password123"
+} | ConvertTo-Json -Depth 5
+
+try {
+    $loginRes = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($loginBody)) -ContentType "application/json; charset=utf-8"
+    Write-Host " FAIL: Login should have been blocked before approval!" -ForegroundColor Red
+} catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Assert-Equal $statusCode 403 "Login returns 403 Forbidden when isApproved = false"
+}
+
+Write-Host "`n=== TEST 3: Validation & Duplicate Protection ===" -ForegroundColor Cyan
+# Duplicate phone
+try {
+    Invoke-RestMethod -Uri "$baseUrl/auth/register" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($regBody)) -ContentType "application/json; charset=utf-8"
+    Write-Host " FAIL: Duplicate registration allowed!" -ForegroundColor Red
+} catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Assert-Equal $statusCode 409 "Duplicate phoneNumber returns 409 Conflict"
+}
+
+# Invalid NID (less than 10 digits)
+$badNidBody = @{
+    name = "টেস্ট"
+    phoneNumber = "01899999999"
+    email = "badnid@test.com"
+    nid = "12345"
