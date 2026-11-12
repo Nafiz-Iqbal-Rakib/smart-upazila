@@ -56,3 +56,33 @@ Respond ONLY with valid JSON:
 
     if (!response.ok) {
       throw new Error(`Gemini API error: ${response.statusText}`);
+    }
+
+    const data: any = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text) return null;
+
+    const parsed = JSON.parse(text);
+    return {
+      department: (Department as any)[parsed.department] || Department.OTHER,
+      urgency: (Urgency as any)[parsed.urgency] || Urgency.MEDIUM,
+      confidence: parsed.confidence || 'ai',
+    };
+  }
+
+  classifyWithRules(
+    category: string,
+    description: string,
+  ): { department: Department; urgency: Urgency; confidence: string } {
+    const text = `${category} ${description}`.toLowerCase();
+
+    // 1. Department keywords
+    let department = Department.OTHER;
+    if (
+      /রাস্তা|সড়ক|সড়কে|কালভার্ট|ব্রিজ|পুল|ভাঙা রাস্তা|গর্ত|রোড|হাইওয়ে|road|pothole|bridge|highway/i.test(
+        text,
+      )
+    ) {
+      department = Department.ROAD;
+    } else if (
+      /বিদ্যুৎ|কারেন্ট|লোডশেডিং|ট্রান্সফরমার|পোস্ট|তার|মিটার|electricity|power|transformer|blackout/i.test(
