@@ -1,0 +1,31 @@
+﻿$OutputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$baseUrl = "http://localhost:3000/api"
+
+function Assert-Equal($actual, $expected, $desc) {
+    if ($actual -eq $expected) {
+        Write-Host " PASS: $desc" -ForegroundColor Green
+    } else {
+        Write-Host " FAIL: $desc (Expected: $expected, Actual: $actual)" -ForegroundColor Red
+    }
+}
+
+Write-Host "=== TEST 1: Public Citizen Registration ===" -ForegroundColor Cyan
+$randomSuffix = Get-Random -Minimum 1000 -Maximum 9999
+$citizenPhone = ("018" + $randomSuffix + "5678").Substring(0, 11)
+$citizenEmail = "citizen$randomSuffix@test.com"
+$citizenNid = ("199" + $randomSuffix + "12345").Substring(0, 10)
+
+$regBody = @{
+    name = "তানভীর আহমেদ"
+    phoneNumber = $citizenPhone
+    email = $citizenEmail
+    nid = $citizenNid
+    address = "গ্রাম: চরপাড়া, ইউনিয়ন: সদর"
+    password = "password123"
+} | ConvertTo-Json -Depth 5
+
+try {
+    $regRes = Invoke-RestMethod -Uri "$baseUrl/auth/register" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($regBody)) -ContentType "application/json; charset=utf-8"
+    Write-Host " Registration successful: $($regRes.message)" -ForegroundColor Green
+} catch {
+    Write-Host " Registration failed: $_" -ForegroundColor Red
