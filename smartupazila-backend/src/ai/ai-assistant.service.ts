@@ -190,3 +190,41 @@ export class AiAssistantService {
     tools: ToolDefinition[],
     user?: { userId: string; role: Role },
   ) {
+    const functionDeclarations = tools.map((t) => ({
+      name: t.name,
+      description: t.description,
+      parameters: t.parameters,
+    }));
+
+    const model = this.configService.get<string>('GEMINI_MODEL') || 'gemini-3.8-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const payload = {
+      contents: [{ parts: [{ text: message }] }],
+      tools: [{ functionDeclarations }],
+    };
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini call error: ${response.statusText}`);
+    }
+
+    const data: any = await response.json();
+    const candidate = data.candidates?.[0]?.content?.parts?.[0];
+
+    // Check if Gemini invoked a function call
+    if (candidate?.functionCall) {
+      const call = candidate.functionCall;
+      const toolName = call.name;
+      const toolArgs = call.args || {};
+
+      const toolResult = await this.executeTool(toolName, toolArgs, user);
+
+      // Return structured response with tool output
+      return {
+        reply: `এআই সহকারী '${toolName}' টুল এক্সিকিউট করে তথ্য খুঁজে পেয়েছে।`,
+        toolUsed: toolName,
