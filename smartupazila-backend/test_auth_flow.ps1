@@ -125,3 +125,34 @@ try {
     Invoke-RestMethod -Uri "$baseUrl/admin/users" -Method Post -Headers $citizenHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($staffBody)) -ContentType "application/json; charset=utf-8"
     Write-Host " FAIL: Citizen was able to create staff!" -ForegroundColor Red
 } catch {
+    $statusCode = $_.Exception.Response.StatusCode.value__
+    Assert-Equal $statusCode 403 "Citizen POST /admin/users returns 403 Forbidden"
+}
+
+# Admin creates staff
+$officerPhone = ("017" + $randomSuffix + "9999").Substring(0, 11)
+$officerNid = ("198" + $randomSuffix + "55555").Substring(0, 10)
+$staffCreateBody = @{
+    name = "ইঞ্জি. কামাল হোসেন"
+    phoneNumber = $officerPhone
+    email = "water.officer$randomSuffix@upazila.gov.bd"
+    nid = $officerNid
+    address = "উপজেলা জনস্বাস্থ্য প্রকৌশল অধিদপ্তর"
+    role = "OFFICER"
+    department = "WATER"
+    password = "officer123"
+}
+$staffCreateJson = $staffCreateBody | ConvertTo-Json -Depth 5
+$staffCreateRes = Invoke-RestMethod -Uri "$baseUrl/admin/users" -Method Post -Headers $headers -Body ([System.Text.Encoding]::UTF8.GetBytes($staffCreateJson)) -ContentType "application/json; charset=utf-8"
+Write-Host " Staff created: $($staffCreateRes.message)" -ForegroundColor Green
+
+# Staff logs in immediately without needing approval
+$staffLogin = @{
+    phoneNumber = $officerPhone
+    password = "officer123"
+} | ConvertTo-Json -Depth 5
+$staffAuth = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($staffLogin)) -ContentType "application/json; charset=utf-8"
+Assert-Equal $staffAuth.user.role "OFFICER" "Staff logged in immediately with role OFFICER"
+Assert-Equal $staffAuth.user.department "WATER" "Staff department is WATER"
+
+Write-Host "`n=== ALL TESTS PASSED! ===" -ForegroundColor Green
