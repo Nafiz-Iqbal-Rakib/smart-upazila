@@ -141,3 +141,51 @@ async function seed() {
       member.role = s.role;
       member.department = s.department || null;
       member.email = member.email || s.email;
+      member.nid = member.nid || s.nid;
+      member.address = member.address || s.address;
+      member.passwordHash = await bcrypt.hash(s.pass, 10);
+      member.isApproved = true;
+      member.isActive = true;
+      await userRepo.save(member);
+      console.log(`✅ Staff updated: ${s.name} (${s.phone})`);
+    }
+  }
+
+  // 2. 🚨 Emergency contacts
+  if ((await emergencyRepo.count()) === 0) {
+    await emergencyRepo.save([
+      emergencyRepo.create({ serviceName: 'জাতীয় জরুরি সেবা', category: 'Emergency', phoneNumber: '999', address: 'সারাদেশ' }),
+      emergencyRepo.create({ serviceName: 'পুলিশ কন্ট্রোল রুম', category: 'Police', phoneNumber: '999', address: 'সারাদেশ' }),
+      emergencyRepo.create({ serviceName: 'ফায়ার সার্ভিস স্টেশন', category: 'Fire', phoneNumber: '999', address: 'সারাদেশ' }),
+      emergencyRepo.create({ serviceName: 'উপজেলা স্বাস্থ্য কমপ্লেক্স', category: 'Hospital', phoneNumber: '০৫২১-৬১২৩৪', address: 'সদর রোড, উপজেলা' }),
+      emergencyRepo.create({ serviceName: 'উপজেলা নির্বাহী অফিসারের কার্যালয়', category: 'Administration', phoneNumber: '০৫২১-৬২৩৪৫', address: 'উপজেলা পরিষদ' }),
+    ]);
+    console.log('✅ Emergency contacts seeded.');
+  }
+
+  // 3. 🩸 Blood donors
+  if ((await donorRepo.count()) === 0) {
+    await donorRepo.save([
+      donorRepo.create({ name: 'রফিকুল ইসলাম', bloodGroup: BloodGroup.O_POS, phoneNumber: '01811111111', address: 'বাজার রোড, সদর', isAvailable: true }),
+      donorRepo.create({ name: 'সুমাইয়া আক্তার', bloodGroup: BloodGroup.A_NEG, phoneNumber: '01922222222', address: 'কলেজ পাড়া', isAvailable: true }),
+    ]);
+    console.log('✅ Blood donors seeded.');
+  }
+
+  // 4. 🍲 Foods
+  if ((await foodRepo.count()) === 0) {
+    await foodRepo.save([
+      foodRepo.create({ name: 'পোড়াবাড়ির চমচম', description: 'ঐতিহ্যবাহী দোকানের স্পেশাল মিষ্টি', category: 'মিষ্টি', isAreaSpecial: true, priceRange: '৫০-১০০ টাকা', address: 'পুরান বাজার' }),
+      foodRepo.create({ name: 'ভুনা খিচুড়ি', description: 'স্থানীয় দোকানের জনপ্রিয় খিচুড়ি', category: 'ভাতের খাবার', priceRange: '৬০-১২০ টাকা', address: 'স্টেশন রোড' }),
+    ]);
+    console.log('✅ Foods seeded.');
+  }
+
+  // 5. 🏛️ Places
+  if ((await placeRepo.count()) === 0) {
+    await placeRepo.save([
+      placeRepo.create({ name: 'ঐতিহাসিক জমিদার বাড়ি', description: 'প্রাচীন প্রত্নতাত্ত্বিক নিদর্শন ও রাজপ্রাসাদ', category: PlaceCategory.HISTORICAL, address: 'মহেড়া, উপজেলা সদর', entryFee: 'মুক্ত', openingHours: 'সকাল ৯টা - সন্ধ্যা ৬টা' }),
+      placeRepo.create({ name: 'নদীর ঘাট ও পার্ক', description: 'বিকালে ঘুরতে যাওয়ার জন্য সুন্দর মনোরম জায়গা', category: PlaceCategory.TOURIST_SPOT, address: 'নদীর পাড়' }),
+    ]);
+    console.log('✅ Places seeded.');
+  }
