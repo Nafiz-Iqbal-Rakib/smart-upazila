@@ -45,3 +45,51 @@ const dataSource = new DataSource({
   synchronize: true,
 });
 
+async function seed() {
+  console.log('🌱 Connecting to database for seeding...');
+  await dataSource.initialize();
+  console.log('✅ Database connected.');
+
+  const userRepo = dataSource.getRepository(User);
+  const emergencyRepo = dataSource.getRepository(EmergencyContact);
+  const donorRepo = dataSource.getRepository(BloodDonor);
+  const foodRepo = dataSource.getRepository(Food);
+  const placeRepo = dataSource.getRepository(Place);
+  const communityRepo = dataSource.getRepository(CommunityListing);
+  const noticeRepo = dataSource.getRepository(Notice);
+
+  // 1. 👑 Admin user (approve করা)
+  let admin = await userRepo.findOneBy({ phoneNumber: '01700000000' });
+  if (!admin) {
+    await userRepo.save(
+      userRepo.create({
+        name: 'Upazila Admin',
+        phoneNumber: '01700000000',
+        email: 'admin@upazila.gov.bd',
+        nid: '1985000000001',
+        address: 'উপজেলা পরিষদ ভবন',
+        passwordHash: await bcrypt.hash('admin123', 10),
+        role: Role.ADMIN,
+        isApproved: true,
+        isActive: true,
+      }),
+    );
+    console.log('✅ Admin → phone: 01700000000 / password: admin123');
+  } else {
+    admin.email = admin.email || 'admin@upazila.gov.bd';
+    admin.nid = admin.nid || '1985000000001';
+    admin.address = admin.address || 'উপজেলা পরিষদ ভবন';
+    admin.isApproved = true;
+    admin.isActive = true;
+    await userRepo.save(admin);
+    console.log('✅ Admin (existing) verified: 01700000000');
+  }
+
+  // Approved Citizen user for tests
+  let citizen = await userRepo.findOneBy({ phoneNumber: '01800000002' });
+  if (!citizen) {
+    await userRepo.save(
+      userRepo.create({
+        name: 'রাশেদ খান (Citizen)',
+        phoneNumber: '01800000002',
+        email: 'citizen@example.com',
