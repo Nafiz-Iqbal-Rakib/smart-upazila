@@ -33,3 +33,20 @@ export class AiController {
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.substring(7);
       try {
+        const secret = this.configService.get<string>('JWT_SECRET');
+        const payload = this.jwtService.verify(token, { secret });
+        if (payload?.sub) {
+          const dbUser = await this.userRepo.findOneBy({ id: payload.sub });
+          if (dbUser && dbUser.isApproved && dbUser.isActive) {
+            user = { userId: dbUser.id, role: dbUser.role };
+          }
+        }
+      } catch {
+        // Guest user if token invalid
+      }
+    }
+
+    return this.assistantService.chat(dto.message, user);
+  }
+}
+
