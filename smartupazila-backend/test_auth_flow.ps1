@@ -93,3 +93,35 @@ try {
 Write-Host "`n=== TEST 5: Admin Login and Staff Creation ===" -ForegroundColor Cyan
 $adminLogin = @{
     phoneNumber = "01700000000"
+    password = "admin123"
+} | ConvertTo-Json -Depth 5
+
+$adminAuth = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($adminLogin)) -ContentType "application/json; charset=utf-8"
+$adminToken = $adminAuth.access_token
+Write-Host " Admin logged in successfully! Role: $($adminAuth.user.role)" -ForegroundColor Green
+
+$headers = @{
+    Authorization = "Bearer $adminToken"
+}
+
+# Pending list check
+$pendingUsers = Invoke-RestMethod -Uri "$baseUrl/admin/users/pending" -Method Get -Headers $headers
+$targetUser = $pendingUsers | Where-Object { $_.phoneNumber -eq $citizenPhone }
+Assert-Equal ($targetUser -ne $null) $true "Newly registered citizen appears in admin pending list"
+Write-Host " Citizen in pending list: ID=$($targetUser.id), NID=$($targetUser.nid), Email=$($targetUser.email)" -ForegroundColor Yellow
+
+# Admin approves citizen
+$approveRes = Invoke-RestMethod -Uri "$baseUrl/admin/users/$($targetUser.id)/approve" -Method Patch -Headers $headers
+Write-Host " Citizen approval response: $($approveRes.message)" -ForegroundColor Green
+
+# Citizen can now login
+$citizenAuth = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($loginBody)) -ContentType "application/json; charset=utf-8"
+Assert-Equal ($citizenAuth.access_token -ne $null) $true "Citizen successfully logged in after admin approval!"
+$citizenToken = $citizenAuth.access_token
+
+# Citizen attempts to call admin/users (Must be 403 Forbidden)
+$citizenHeaders = @{ Authorization = "Bearer $citizenToken" }
+try {
+    Invoke-RestMethod -Uri "$baseUrl/admin/users" -Method Post -Headers $citizenHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($staffBody)) -ContentType "application/json; charset=utf-8"
+    Write-Host " FAIL: Citizen was able to create staff!" -ForegroundColor Red
+} catch {
