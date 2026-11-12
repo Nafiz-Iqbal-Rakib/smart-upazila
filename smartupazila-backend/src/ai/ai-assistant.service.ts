@@ -151,3 +151,42 @@ export class AiAssistantService {
         return this.placesService.findAll(cat, args?.address, args?.search);
       }
 
+      case 'track_complaint':
+        return this.complaintsService.findByTrackingId(args?.trackingId, user);
+
+      case 'update_complaint_status':
+        if (!user) throw new ForbiddenException('লগইন করা আবশ্যক');
+        return this.adminService.updateComplaintStatus(
+          args.complaintId,
+          user.userId,
+          args.status as Status,
+        );
+
+      default:
+        throw new Error(`টুল ইমপ্লিমেন্টেশন পাওয়া যায়নি: ${name}`);
+    }
+  }
+
+  // Main Chat & Function Calling Entrypoint
+  async chat(message: string, user?: { userId: string; role: Role }) {
+    const apiKey = this.configService.get<string>('GEMINI_API_KEY');
+    const permittedTools = this.getPermittedTools(user?.role);
+
+    if (apiKey) {
+      try {
+        return await this.chatWithGemini(apiKey, message, permittedTools, user);
+      } catch (err: any) {
+        this.logger.warn(`Gemini Function Calling failed (${err.message}), using local tool selector`);
+      }
+    }
+
+    // Fallback: Local Smart Intent & Tool Selection
+    return this.chatWithLocalSelector(message, permittedTools, user);
+  }
+
+  private async chatWithGemini(
+    apiKey: string,
+    message: string,
+    tools: ToolDefinition[],
+    user?: { userId: string; role: Role },
+  ) {
