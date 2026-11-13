@@ -54,3 +54,59 @@ export class ComplaintsService {
     const complaint = this.repo.create({
       category: dto.category,
       description: dto.description,
+      imageUrl: imagePublicId ? null : dto.imageUrl || null,
+      imagePublicId: imagePublicId || null,
+      trackingId,
+      department: classification.department,
+      urgency: classification.urgency,
+      assignedTo: assignedOfficer,
+      user: { id: userId },
+    });
+
+    const saved = await this.repo.save(complaint);
+
+    return {
+      message: 'অভিযোগ জমা হয়েছে ✅',
+      trackingId: saved.trackingId,
+      status: saved.status,
+      department: saved.department,
+      urgency: saved.urgency,
+      assignedOfficer: assignedOfficer
+        ? `${assignedOfficer.name} (${saved.department} বিভাগ)`
+        : 'অপেক্ষারত (অ্যাডমিন পর্যালোচনা)',
+    };
+  }
+
+  async findMyComplaints(userId: string) {
+    const complaints = await this.repo.find({
+      where: { user: { id: userId } },
+      relations: { assignedTo: true, reviewedBy: true },
+      select: {
+        id: true,
+        category: true,
+        department: true,
+        urgency: true,
+        description: true,
+        imageUrl: true,
+        imagePublicId: true,
+        status: true,
+        trackingId: true,
+        adminRemark: true,
+        createdAt: true,
+        updatedAt: true,
+        assignedTo: { id: true, name: true, department: true },
+        reviewedBy: { id: true, name: true, role: true },
+      },
+      order: { createdAt: 'DESC' },
+    });
+
+    return complaints.map((c) => this.withResolvedImageUrl(c, true));
+  }
+
+  async findByTrackingId(
+    trackingId: string,
+    requestingUser?: { userId: string; role: Role },
+  ) {
+    const complaint = await this.repo.findOne({
+      where: { trackingId },
+      relations: { user: true, assignedTo: true, reviewedBy: true },
