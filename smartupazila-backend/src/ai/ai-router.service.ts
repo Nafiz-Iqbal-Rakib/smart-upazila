@@ -86,3 +86,32 @@ Respond ONLY with valid JSON:
       department = Department.ROAD;
     } else if (
       /বিদ্যুৎ|কারেন্ট|লোডশেডিং|ট্রান্সফরমার|পোস্ট|তার|মিটার|electricity|power|transformer|blackout/i.test(
+        text,
+      )
+    ) {
+      department = Department.ELECTRICITY;
+    } else if (
+      /পানি|সুপেয় পানি|ড্রেন|জলাবদ্ধতা|নর্দমা|পয়ঃনিষ্কাশন|পানির লাইন|কল|টিউবওয়েল|drainage|water|flood|sewage/i.test(
+        text,
+      )
+    ) {
+      department = Department.WATER;
+    } else if (
+      /হাসপাতাল|ডাক্তার|নার্স|ওষুধ|ক্লিনিক|স্বাস্থ্য|অ্যাম্বুলেন্স|রোগী|স্বাস্থ্য কমপ্লেক্স|টিকা|health|hospital|doctor|clinic|medicine/i.test(
+        text,
+      )
+    ) {
+      department = Department.HEALTH;
+    } else if (
+      /স্কুল|কলেজ|মাদ্রাসা|শিক্ষক|ক্লাস|বই|শিক্ষা|উপবৃত্তি|school|college|education|teacher/i.test(
+        text,
+      )
+    ) {
+      department = Department.EDUCATION;
+    } else if (
+      /কৃষি|সার|বীজ|কীটনাশক|ধান|ফসল|সেচ|কৃষক|মাঠ|agriculture|fertilizer|farmer|crop/i.test(
+        text,
+      )
+    ) {
+      department = Department.AGRICULTURE;
+    } else if (
