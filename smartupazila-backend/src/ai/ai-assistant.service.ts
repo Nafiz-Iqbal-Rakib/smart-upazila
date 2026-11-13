@@ -74,3 +74,42 @@ export class AiAssistantService {
           category: { type: 'STRING', description: 'HISTORICAL, TOURIST_SPOT, PARK, RELIGIOUS' },
           search: { type: 'STRING', description: 'স্থানের নাম' },
         },
+      },
+    },
+    {
+      name: 'track_complaint',
+      description: 'নাগরিক অভিযোগের Tracking ID দিয়ে বর্তমান অগ্রগতি ও অবস্থা জানার টুল।',
+      allowedRoles: 'ALL',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          trackingId: { type: 'STRING', description: 'যেমন SUZ-XXXXXX' },
+        },
+        required: ['trackingId'],
+      },
+    },
+    {
+      name: 'update_complaint_status',
+      description: 'অভিযোগের স্ট্যাটাস পরিবর্তন করার টুল (শুধুমাত্র সংশ্লিষ্ট কর্মকর্তা বা অ্যাডমিন)।',
+      allowedRoles: [Role.OFFICER, Role.ADMIN],
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          complaintId: { type: 'STRING', description: 'অভিযোগের UUID' },
+          status: { type: 'STRING', description: 'PENDING, IN_PROGRESS, RESOLVED, REJECTED' },
+        },
+        required: ['complaintId', 'status'],
+      },
+    },
+  ];
+
+  constructor(
+    private configService: ConfigService,
+    private emergencyService: EmergencyService,
+    private bloodDonorsService: BloodDonorsService,
+    private foodsService: FoodsService,
+    private placesService: PlacesService,
+    private complaintsService: ComplaintsService,
+    private adminService: AdminService,
+  ) {}
+
