@@ -92,3 +92,49 @@ export class AdminController {
     @Body() dto: ChangeRoleDto,
   ) {
     return this.adminService.changeRole(id, req.user.userId, dto.role, dto.department);
+  }
+
+  @Patch('users/:id/reset-password')
+  @ApiOperation({ summary: 'যেকোনো ব্যবহারকারীর পাসওয়ার্ড সরাসরি পরিবর্তন করো (admin only)' })
+  resetPassword(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    return this.adminService.resetUserPassword(id, dto.newPassword);
+  }
+
+  // 4. Complaints Moderation (Admin & Officer both allowed)
+  @Get('complaints')
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @ApiOperation({ summary: 'সব complaint (Officer শুধু নিজের বিভাগ দেখবে, Admin সব দেখবে)' })
+  complaints(@Query() q: ListComplaintsDto, @Req() req: any) {
+    return this.adminService.findComplaints(q, req.user);
+  }
+
+  @Patch('complaints/:id/status')
+  @Roles(Role.ADMIN, Role.OFFICER)
+  @ApiOperation({ summary: 'অভিযোগের স্ট্যাটাস পরিবর্তন ও মন্তব্য যোগ করো (reviewedBy auto-save)' })
+  updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateComplaintStatusDto,
+    @Req() req: any,
+  ) {
+    return this.adminService.updateComplaintStatus(
+      id,
+      req.user.userId,
+      dto.status,
+      dto.remark,
+      dto.assignTo,
+    );
+  }
+
+  @Patch('complaints/:id/assign')
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'অভিযোগ নির্দিষ্ট কর্মকর্তার কাছে ম্যানুয়ালি অ্যাসাইন করো (admin only)' })
+  assignComplaint(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AssignOfficerDto,
+  ) {
+    return this.adminService.assignComplaint(id, dto.officerId);
+  }
+}
