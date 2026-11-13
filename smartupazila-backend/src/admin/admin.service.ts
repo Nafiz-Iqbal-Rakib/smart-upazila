@@ -254,3 +254,88 @@ export class AdminService {
         createdAt: true,
         updatedAt: true,
         user: { id: true, name: true, phoneNumber: true },
+        assignedTo: { id: true, name: true, department: true },
+        reviewedBy: { id: true, name: true, phoneNumber: true, role: true },
+      },
+      order: { createdAt: 'DESC' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+
+    const sanitizedItems = items.map((item) => {
+      const { imagePublicId, ...rest } = item;
+      return {
+        ...rest,
+        imageUrl: imagePublicId
+          ? this.cloudinaryService.getSignedImageUrl(imagePublicId)
+          : rest.imageUrl,
+      };
+    });
+
+    return { items: sanitizedItems, total, page, limit, totalPages: Math.ceil(total / limit) };
+  }
+
+  async updateComplaintStatus(
+    id: string,
+    reviewerId: string,
+    status: Status,
+    remark?: string,
+    assignTo?: string,
+  ) {
+    const complaint = await this.complaintRepo.findOne({
+      where: { id },
+      relations: { user: true, assignedTo: true, reviewedBy: true },
+    });
+    if (!complaint) throw new NotFoundException('অভিযোগ পাওয়া যায়নি');
+
+    const reviewer = await this.userRepo.findOneBy({ id: reviewerId });
+    if (!reviewer) throw new NotFoundException('রিভিউয়ার পাওয়া যায়নি');
+
+    if (reviewer.role === Role.OFFICER) {
+      const isAssigned = complaint.assignedTo && complaint.assignedTo.id === reviewer.id;
+      const isSameDept = reviewer.department && complaint.department === reviewer.department;
+      if (!isAssigned && !isSameDept) {
+        throw new ForbiddenException(
+          'আপনি কেবল আপনার বিভাগের বা আপনার কাছে অ্যাসাইন করা অভিযোগের স্ট্যাটাস পরিবর্তন করতে পারেন',
+        );
+      }
+    }
+
+    complaint.status = status;
+    complaint.reviewedBy = reviewer;
+    if (remark !== undefined) {
+      complaint.adminRemark = remark;
+    }
+
+    if (assignTo) {
+      const targetOfficer = await this.userRepo.findOneBy({
+        id: assignTo,
+        role: Role.OFFICER,
+      });
+      if (!targetOfficer) {
+        throw new NotFoundException('অ্যাসাইন করার জন্য অফিসার পাওয়া যায়নি');
+      }
+      complaint.assignedTo = targetOfficer;
+    }
+
+    const saved = await this.complaintRepo.save(complaint);
+    return {
+      id: saved.id,
+      trackingId: saved.trackingId,
+      category: saved.category,
+      department: saved.department,
+      urgency: saved.urgency,
+      description: saved.description,
+      imageUrl: saved.imagePublicId
+        ? this.cloudinaryService.getSignedImageUrl(saved.imagePublicId)
+        : saved.imageUrl,
+      status: saved.status,
+      adminRemark: saved.adminRemark,
+      user: saved.user
+        ? { id: saved.user.id, name: saved.user.name, phoneNumber: saved.user.phoneNumber }
+        : null,
+      assignedTo: saved.assignedTo
+        ? {
+            id: saved.assignedTo.id,
+            name: saved.assignedTo.name,
+            department: saved.assignedTo.department,
