@@ -228,3 +228,42 @@ export class AiAssistantService {
       return {
         reply: `এআই সহকারী '${toolName}' টুল এক্সিকিউট করে তথ্য খুঁজে পেয়েছে।`,
         toolUsed: toolName,
+        toolArgs,
+        data: toolResult,
+      };
+    }
+
+    return {
+      reply: candidate?.text || 'আমি কীভাবে আপনাকে সাহায্য করতে পারি?',
+      toolUsed: null,
+      data: null,
+    };
+  }
+
+  private async chatWithLocalSelector(
+    message: string,
+    tools: ToolDefinition[],
+    user?: { userId: string; role: Role },
+  ) {
+    const text = message.toLowerCase();
+
+    // 1. Check for tracking ID
+    const trackingMatch = message.match(/SUZ-[A-Z0-9]{6}/i);
+    if (trackingMatch && tools.some((t) => t.name === 'track_complaint')) {
+      const trackingId = trackingMatch[0].toUpperCase();
+      try {
+        const complaint = (await this.executeTool('track_complaint', { trackingId }, user)) as any;
+        return {
+          reply: `অভিযোগ আইডি ${trackingId}-এর বর্তমান অবস্থা: ${complaint.status} (বিভাগ: ${complaint.department || 'OTHER'}, জরুরি অবস্থা: ${complaint.urgency || 'MEDIUM'})`,
+          toolUsed: 'track_complaint',
+          toolArgs: { trackingId },
+          data: complaint,
+        };
+      } catch {
+        return {
+          reply: `অভিযোগ আইডি ${trackingId} খুঁজে পাওয়া যায়নি।`,
+          toolUsed: 'track_complaint',
+          toolArgs: { trackingId },
+          data: null,
+        };
+      }
