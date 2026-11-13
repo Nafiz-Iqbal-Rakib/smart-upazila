@@ -36,3 +36,41 @@ export class AiAssistantService {
         },
       },
     },
+    {
+      name: 'find_blood_donors',
+      description: 'উপজেলায় রক্তদাতাদের তালিকা খোঁজার টুল (ব্লাড গ্রুপ ও এলাকা দিয়ে)।',
+      allowedRoles: 'ALL',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          bloodGroup: {
+            type: 'STRING',
+            description: 'ব্লাড গ্রুপ যেমন A+, A-, B+, B-, AB+, AB-, O+, O-',
+          },
+          address: { type: 'STRING', description: 'নির্দিষ্ট এলাকা বা পাড়া' },
+        },
+      },
+    },
+    {
+      name: 'search_foods',
+      description: 'উপজেলার বিখ্যাত খাবার ও রেস্তোরাঁ খোঁজার টুল।',
+      allowedRoles: 'ALL',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          category: { type: 'STRING', description: 'মিষ্টি, ভাতের খাবার, স্ট্রিট ফুড ইত্যাদি' },
+          search: { type: 'STRING', description: 'খাবারের নাম যেমন চমচম, খিচুড়ি' },
+          isAreaSpecial: { type: 'BOOLEAN', description: 'এলাকার বিশেষ ঐতিহ্যবাহী খাবার কিনা' },
+        },
+      },
+    },
+    {
+      name: 'search_places',
+      description: 'উপজেলার দর্শনীয় স্থান, ঐতিহাসিক প্রাসাদ বা পার্ক খোঁজার টুল।',
+      allowedRoles: 'ALL',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          category: { type: 'STRING', description: 'HISTORICAL, TOURIST_SPOT, PARK, RELIGIOUS' },
+          search: { type: 'STRING', description: 'স্থানের নাম' },
+        },
