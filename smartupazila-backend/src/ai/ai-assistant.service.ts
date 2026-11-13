@@ -113,3 +113,41 @@ export class AiAssistantService {
     private adminService: AdminService,
   ) {}
 
+  // Get tools permitted for current user role
+  getPermittedTools(userRole?: Role): ToolDefinition[] {
+    return this.tools.filter((tool) => {
+      if (tool.allowedRoles === 'ALL') return true;
+      if (!userRole) return false;
+      return tool.allowedRoles.includes(userRole);
+    });
+  }
+
+  // Safe Tool Executor
+  async executeTool(name: string, args: any, user?: { userId: string; role: Role }) {
+    const tool = this.tools.find((t) => t.name === name);
+    if (!tool) throw new Error(`অজানা টুল: ${name}`);
+
+    // Security Check
+    if (tool.allowedRoles !== 'ALL') {
+      if (!user || !user.role || !tool.allowedRoles.includes(user.role)) {
+        throw new ForbiddenException(`আপনার (${user?.role || 'GUEST'}) এই টুল চালানোর অনুমতি নেই`);
+      }
+    }
+
+    switch (name) {
+      case 'get_emergency_contacts':
+        return this.emergencyService.findAll(args?.category, args?.address);
+
+      case 'find_blood_donors': {
+        const bg = args?.bloodGroup ? (args.bloodGroup as BloodGroup) : undefined;
+        return this.bloodDonorsService.findAll(bg, args?.address);
+      }
+
+      case 'search_foods':
+        return this.foodsService.findAll(args?.category, args?.isAreaSpecial, args?.search);
+
+      case 'search_places': {
+        const cat = args?.category ? (args.category as PlaceCategory) : undefined;
+        return this.placesService.findAll(cat, args?.address, args?.search);
+      }
+
