@@ -267,3 +267,41 @@ export class AiAssistantService {
           data: null,
         };
       }
+    }
+
+    // 2. Check for blood donors (check before emergency since users often say "জরুরি রক্ত")
+    if (
+      /রক্ত|ব্লাড|donor|blood/i.test(text) &&
+      tools.some((t) => t.name === 'find_blood_donors')
+    ) {
+      const bgMatch = message.match(/(A|B|AB|O)[+-]/i);
+      const bloodGroup = bgMatch ? bgMatch[0].toUpperCase() : undefined;
+      const result = await this.executeTool('find_blood_donors', { bloodGroup }, user);
+      return {
+        reply: bloodGroup
+          ? `${bloodGroup} গ্রুপের উপলব্ধ রক্তদাতাদের তালিকা:`
+          : 'উপলব্ধ রক্তদাতাদের তালিকা নিচে দেওয়া হলো:',
+        toolUsed: 'find_blood_donors',
+        toolArgs: { bloodGroup },
+        data: result,
+      };
+    }
+
+    // 3. Check for emergency contacts
+    if (
+      /পুলিশ|থানা|ফায়ার|হাসপাতাল|অ্যাম্বুলেন্স|কন্ট্রোল রুম|জরুরি সেবা|জরুরি যোগাযোগ|emergency|police|hospital|fire/i.test(
+        text,
+      ) &&
+      tools.some((t) => t.name === 'get_emergency_contacts')
+    ) {
+      let category: string | undefined;
+      if (/পুলিশ|থানা/i.test(text)) category = 'Police';
+      else if (/হাসপাতাল|অ্যাম্বুলেন্স/i.test(text)) category = 'Hospital';
+      else if (/ফায়ার/i.test(text)) category = 'Fire';
+
+      const result = await this.executeTool('get_emergency_contacts', { category }, user);
+      return {
+        reply: 'উপজেলার জরুরি যোগাযোগ নম্বরসমূহ নিচে দেওয়া হলো:',
+        toolUsed: 'get_emergency_contacts',
+        toolArgs: { category },
+        data: result,
