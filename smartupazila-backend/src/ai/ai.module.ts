@@ -15,3 +15,19 @@ import { User } from '../users/user.entity';
 
 @Module({
   imports: [
+    ConfigModule,
+    JwtModule,
+    TypeOrmModule.forFeature([User]),
+    AiRouterModule,
+    EmergencyModule,
+    BloodDonorsModule,
+    FoodsModule,
+    PlacesModule,
+    ComplaintsModule,
+    AdminModule,
+  ],
+  controllers: [AiController],
+  providers: [AiAssistantService],
+  exports: [AiAssistantService],
+})
+export class AiModule {}
