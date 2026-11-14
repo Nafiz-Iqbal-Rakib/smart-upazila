@@ -76,3 +76,14 @@ import { CommunityListing } from './community/community-listing.entity';
     BloodDonorsModule,
     FoodsModule,
     PlacesModule,
+    CommunityModule,
+    AiRouterModule,
+    AiModule,
+    CloudinaryModule,
+    UsersModule,
+    NoticesModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService],
+})
+export class AppModule {}
