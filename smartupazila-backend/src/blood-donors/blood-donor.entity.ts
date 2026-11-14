@@ -18,3 +18,23 @@ export class BloodDonor {
 
   @Column()
   name: string;
+
+  @Column({ type: 'enum', enum: BloodGroup })
+  bloodGroup: BloodGroup;
+
+  @Column({ unique: true })
+  phoneNumber: string;
+
+  @Column()
+  address: string;
+
+  @Column({ default: true })
+  isAvailable: boolean;
+
+  @Column({ type: 'date', nullable: true })
+  lastDonationDate: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+}
+
