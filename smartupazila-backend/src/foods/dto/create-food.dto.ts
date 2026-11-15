@@ -31,3 +31,19 @@ export class CreateFoodDto {
 
   @ApiProperty({ example: 'বাজার রোড, সদর' })
   @IsString()
+  @IsNotEmpty()
+  address: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/chomchom.jpg' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'খাবারের ছবি ফাইল (ঐচ্ছিক - সরাসরি আপলোড করলে Cloudinary-তে সেভ হবে)',
+  })
+  @IsOptional()
+  image?: any;
+}
