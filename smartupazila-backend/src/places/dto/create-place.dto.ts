@@ -22,3 +22,26 @@ export class CreatePlaceDto {
   @IsNotEmpty()
   address: string;
 
+  @ApiPropertyOptional({ example: 'https://example.com/palace.jpg' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @ApiPropertyOptional({ example: '২০ টাকা', default: 'মুক্ত' })
+  @IsOptional()
+  @IsString()
+  entryFee?: string;
+
+  @ApiPropertyOptional({ example: 'সকাল ৯টা - সন্ধ্যা ৬টা' })
+  @IsOptional()
+  @IsString()
+  openingHours?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'স্থানের ছবি ফাইল (ঐচ্ছিক - ছবি আপলোড করলে Cloudinary-তে সেভ হবে)',
+  })
+  @IsOptional()
+  image?: any;
+}
