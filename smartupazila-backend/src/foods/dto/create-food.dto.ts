@@ -14,3 +14,20 @@ export class CreateFoodDto {
   description: string;
 
   @ApiProperty({ example: 'মিষ্টি' })
+  @IsString()
+  @IsNotEmpty()
+  category: string;
+
+  @ApiPropertyOptional({ default: false, example: true })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true || value === 1 || value === '1')
+  @IsBoolean()
+  isAreaSpecial?: boolean;
+
+  @ApiPropertyOptional({ example: '৩৫০-৪৫০ টাকা/কেজি' })
+  @IsOptional()
+  @IsString()
+  priceRange?: string;
+
+  @ApiProperty({ example: 'বাজার রোড, সদর' })
+  @IsString()
