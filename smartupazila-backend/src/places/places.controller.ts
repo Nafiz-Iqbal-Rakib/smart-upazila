@@ -79,3 +79,29 @@ export class PlacesController {
 
   @Patch(':id')
   @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @UseInterceptors(FileInterceptor('image', { limits: { fileSize: 5 * 1024 * 1024 } }))
+  @ApiOperation({ summary: 'স্থানের তথ্য আপডেট করো (admin only)' })
+  @ApiConsumes('multipart/form-data', 'application/json')
+  async update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdatePlaceDto,
+    @UploadedFile() file?: Express.Multer.File,
+  ) {
+    if (file) {
+      const uploadRes = await this.cloudinaryService.uploadImage(file, 'smartupazila/places');
+      dto.imageUrl = uploadRes.secure_url;
+    }
+    return this.service.update(id, dto);
+  }
+
+  @Delete(':id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN)
+  @ApiOperation({ summary: 'স্থানটি মুছে ফেলো (admin only)' })
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.service.remove(id);
+  }
+}
