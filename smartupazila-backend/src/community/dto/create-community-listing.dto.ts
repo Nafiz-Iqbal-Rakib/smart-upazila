@@ -20,3 +20,25 @@ export class CreateCommunityListingDto {
   description?: string;
 
   @ApiProperty({ example: 'উপজেলা পরিষদ সংলগ্ন' })
+  @IsString()
+  @IsNotEmpty()
+  address: string;
+
+  @ApiPropertyOptional({ example: '01700000000' })
+  @IsOptional()
+  @IsString()
+  phoneNumber?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/school.jpg' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'প্রতিষ্ঠানের ছবি ফাইল (ঐচ্ছিক - ছবি আপলোড করলে Cloudinary-তে সেভ হবে)',
+  })
+  @IsOptional()
+  image?: any;
+}
