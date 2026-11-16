@@ -27,3 +27,31 @@ export class User {
 
   @Column({ nullable: true })
   avatarUrl: string | null;
+
+  @Column({ type: 'varchar', nullable: true })
+  avatarPublicId: string | null;
+
+  @Column()
+  passwordHash: string;
+
+  @Column({ type: 'enum', enum: Role, default: Role.CITIZEN })
+  role: Role;
+
+  @Column({ type: 'enum', enum: Department, nullable: true })
+  department: Department | null;
+
+  @Column({ default: false })
+  isApproved: boolean;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @OneToMany(() => Complaint, (complaint) => complaint.user)
+  complaints: Complaint[];
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}
