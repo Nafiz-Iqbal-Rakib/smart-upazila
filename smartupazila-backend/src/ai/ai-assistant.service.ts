@@ -305,3 +305,41 @@ export class AiAssistantService {
         toolUsed: 'get_emergency_contacts',
         toolArgs: { category },
         data: result,
+      };
+    }
+
+    // 4. Check for local foods
+    if (
+      /খাবার|মিষ্টি|চমচম|খিচুড়ি|রেস্তোরাঁ|food/i.test(text) &&
+      tools.some((t) => t.name === 'search_foods')
+    ) {
+      const result = await this.executeTool('search_foods', {}, user);
+      return {
+        reply: 'উপজেলার বিখ্যাত খাবার ও রেস্তোরাঁর তথ্য:',
+        toolUsed: 'search_foods',
+        toolArgs: {},
+        data: result,
+      };
+    }
+
+    // 5. Check for places
+    if (
+      /জমিদার|স্থান|দর্শনীয়|পার্ক|ঘুরতে|মসজিদ|place|tourist/i.test(text) &&
+      tools.some((t) => t.name === 'search_places')
+    ) {
+      const result = await this.executeTool('search_places', {}, user);
+      return {
+        reply: 'উপজেলার দর্শনীয় ও ঐতিহাসিক স্থানসমূহের তথ্য:',
+        toolUsed: 'search_places',
+        toolArgs: {},
+        data: result,
+      };
+    }
+
+    return {
+      reply: 'স্বাগতম! আপনি উপজেলার জরুরি সেবা, রক্তদাতা, খাবার, দর্শনীয় স্থান বা নাগরিক অভিযোগ ট্র্যাক করতে পারেন।',
+      toolUsed: null,
+      data: null,
+    };
+  }
+}
