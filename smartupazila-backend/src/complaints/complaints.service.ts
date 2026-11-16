@@ -110,3 +110,59 @@ export class ComplaintsService {
     const complaint = await this.repo.findOne({
       where: { trackingId },
       relations: { user: true, assignedTo: true, reviewedBy: true },
+      select: {
+        id: true,
+        category: true,
+        department: true,
+        urgency: true,
+        description: true,
+        imageUrl: true,
+        imagePublicId: true,
+        status: true,
+        trackingId: true,
+        adminRemark: true,
+        createdAt: true,
+        updatedAt: true,
+        user: { id: true, name: true },
+        assignedTo: { id: true, name: true, department: true },
+        reviewedBy: { id: true, name: true, role: true },
+      },
+    });
+    if (!complaint) throw new NotFoundException('এই Tracking ID-এ কোনো অভিযোগ পাওয়া যায়নি');
+
+    const canViewPrivateImage = Boolean(
+      requestingUser &&
+        (requestingUser.role === Role.ADMIN ||
+          requestingUser.userId === complaint.user?.id ||
+          requestingUser.userId === complaint.assignedTo?.id),
+    );
+
+    return this.withResolvedImageUrl(complaint, canViewPrivateImage);
+  }
+
+  private withResolvedImageUrl(complaint: Complaint, canViewPrivateImage: boolean) {
+    const { imagePublicId, ...rest } = complaint;
+    if (imagePublicId) {
+      return {
+        ...rest,
+        imageUrl: canViewPrivateImage
+          ? this.cloudinaryService.getSignedImageUrl(imagePublicId)
+          : null,
+      };
+    }
+    return {
+      ...rest,
+      imageUrl: canViewPrivateImage ? rest.imageUrl : null,
+    };
+  }
+
+  // যেমন: SUZ-7F3K2M
+  private generateTrackingId(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 0,O,1,I বাদ (confusion এড়াতে)
+    let code = '';
+    for (let i = 0; i < 6; i++) {
+      code += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return `SUZ-${code}`;
+  }
+}
