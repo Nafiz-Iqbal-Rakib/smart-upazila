@@ -115,3 +115,32 @@ Respond ONLY with valid JSON:
     ) {
       department = Department.AGRICULTURE;
     } else if (
+      /পুলিশ|চুরি|ছিনতাই|ডাকাতি|মারামারি|ইভটিজিং|মাদক|জুয়া|নিরাপত্তা|crime|police|security|theft/i.test(
+        text,
+      )
+    ) {
+      department = Department.LAW_ORDER;
+    }
+
+    // 2. Urgency keywords
+    let urgency = Urgency.MEDIUM;
+    if (
+      /জরুরি|বিপদজনক|জীবননাশের|আগুন|দুর্ঘটনা|মারাত্মক|ধ্বসে|ভেঙে পড়ছে|ঝুঁকিপূর্ণ|death|danger|hazard|urgent|emergency/i.test(
+        text,
+      )
+    ) {
+      urgency = Urgency.EMERGENCY;
+    } else if (
+      /অনেক দিন ধরে|গুরুতর|বন্ধ হয়ে আছে|চরম দুর্ভোগ|অসহ্য|severe|critical/i.test(
+        text,
+      )
+    ) {
+      urgency = Urgency.HIGH;
+    } else if (/সাধারণ|পরামর্শ|তথ্য|minor|info/i.test(text)) {
+      urgency = Urgency.LOW;
+    }
+
+    return { department, urgency, confidence: 'rule-based' };
+  }
+}
+
