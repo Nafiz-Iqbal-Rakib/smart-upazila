@@ -32,3 +32,36 @@ export class CreateNoticeDto {
   @IsOptional()
   @IsEnum(NoticeCategory, { message: 'সঠিক ক্যাটাগরি দিন' })
   category?: NoticeCategory;
+
+  @ApiPropertyOptional({
+    enum: NoticePriority,
+    default: NoticePriority.NORMAL,
+    example: NoticePriority.URGENT,
+  })
+  @IsOptional()
+  @IsEnum(NoticePriority, { message: 'সঠিক প্রায়োরিটি দিন' })
+  priority?: NoticePriority;
+
+  @ApiPropertyOptional({ example: 'https://example.com/notice.jpg' })
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/notice.pdf' })
+  @IsOptional()
+  @IsString()
+  pdfUrl?: string;
+
+  @ApiPropertyOptional({ example: '2026-12-31T23:59:59.000Z' })
+  @IsOptional()
+  @IsDateString({}, { message: 'সঠিক তারিখ ফরম্যাট দিন (ISO 8601)' })
+  expiresAt?: string;
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'binary',
+    description: 'নোটিশের ব্যানার বা বিজ্ঞপ্তির ছবি (ঐচ্ছিক - ক্লাউডিনারিতে আপলোড হবে)',
+  })
+  @IsOptional()
+  image?: any;
+}
