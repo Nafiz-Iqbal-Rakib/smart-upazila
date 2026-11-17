@@ -34,3 +34,39 @@ export class Notice {
 
   @Column('text')
   content: string;
+
+  @Column({
+    type: 'enum',
+    enum: NoticeCategory,
+    default: NoticeCategory.GENERAL,
+  })
+  category: NoticeCategory;
+
+  @Column({
+    type: 'enum',
+    enum: NoticePriority,
+    default: NoticePriority.NORMAL,
+  })
+  priority: NoticePriority;
+
+  @Column({ nullable: true })
+  imageUrl: string | null;
+
+  @Column({ nullable: true })
+  pdfUrl: string | null;
+
+  @Column({ default: true })
+  isActive: boolean;
+
+  @Column({ type: 'timestamp', nullable: true })
+  expiresAt: Date | null;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  createdBy: User | null;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}
