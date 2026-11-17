@@ -84,3 +84,45 @@ export class UsersService {
     } else if (dto.avatarUrl) {
       user.avatarUrl = dto.avatarUrl;
       user.avatarPublicId = null;
+    }
+
+    await this.userRepo.save(user);
+
+    return {
+      message: 'প্রোফাইল সফলভাবে আপডেট করা হয়েছে',
+      user: await this.getProfile(userId),
+    };
+  }
+
+  async changePassword(userId: string, oldPass: string, newPass: string) {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('ব্যবহারকারী পাওয়া যায়নি');
+
+    const isMatch = await bcrypt.compare(oldPass, user.passwordHash);
+    if (!isMatch) {
+      throw new UnauthorizedException('বর্তমান পাসওয়ার্ডটি সঠিক নয়');
+    }
+
+    if (oldPass === newPass) {
+      throw new BadRequestException('নতুন পাসওয়ার্ডটি বর্তমান পাসওয়ার্ড থেকে ভিন্ন হতে হবে');
+    }
+
+    user.passwordHash = await bcrypt.hash(newPass, 10);
+    await this.userRepo.save(user);
+
+    return { success: true, message: 'পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে' };
+  }
+
+  async adminResetPassword(userId: string, newPass: string) {
+    const user = await this.userRepo.findOneBy({ id: userId });
+    if (!user) throw new NotFoundException('ব্যবহারকারী পাওয়া যায়নি');
+
+    user.passwordHash = await bcrypt.hash(newPass, 10);
+    await this.userRepo.save(user);
+
+    return {
+      success: true,
+      message: `ইউজার ${user.name} (${user.phoneNumber})-এর পাসওয়ার্ড সফলভাবে রিসেট করা হয়েছে`,
+    };
+  }
+}
