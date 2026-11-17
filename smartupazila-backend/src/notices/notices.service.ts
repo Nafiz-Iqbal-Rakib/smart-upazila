@@ -49,3 +49,53 @@ export class NoticesService {
         imageUrl: true,
         pdfUrl: true,
         isActive: true,
+        expiresAt: true,
+        createdAt: true,
+        createdBy: { id: true, name: true, role: true },
+      },
+      order: {
+        priority: 'DESC', // CRITICAL > URGENT > NORMAL
+        createdAt: 'DESC',
+      },
+    });
+  }
+
+  async findOne(id: string) {
+    const notice = await this.repo.findOne({
+      where: { id },
+      relations: { createdBy: true },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        category: true,
+        priority: true,
+        imageUrl: true,
+        pdfUrl: true,
+        isActive: true,
+        expiresAt: true,
+        createdAt: true,
+        updatedAt: true,
+        createdBy: { id: true, name: true, role: true },
+      },
+    });
+
+    if (!notice) throw new NotFoundException('নোটিশটি পাওয়া যায়নি');
+    return notice;
+  }
+
+  async update(id: string, dto: UpdateNoticeDto) {
+    const notice = await this.findOne(id);
+    if (dto.expiresAt) {
+      (dto as any).expiresAt = new Date(dto.expiresAt);
+    }
+    Object.assign(notice, dto);
+    return this.repo.save(notice);
+  }
+
+  async remove(id: string) {
+    const notice = await this.findOne(id);
+    await this.repo.remove(notice);
+    return { success: true, message: 'নোটিশ সফলভাবে মুছে ফেলা হয়েছে' };
+  }
+}
