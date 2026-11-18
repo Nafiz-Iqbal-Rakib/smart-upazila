@@ -116,3 +116,61 @@ $trackRes = Invoke-RestMethod -Uri "$baseUrl/complaints/track/$trackingId" -Meth
 Assert-Equal $trackRes.trackingId $trackingId "Public track returned correct complaint"
 Assert-Equal $trackRes.status "IN_PROGRESS" "Public track shows current status IN_PROGRESS"
 Assert-Equal ($trackRes.adminRemark -ne $null) $true "Public track shows official remark: $($trackRes.adminRemark)"
+Assert-Equal ($trackRes.user.phoneNumber -eq $null) $true "Privacy protection: Citizen phone number is NOT exposed to public"
+
+Write-Host "`n=== TEST 7: Citizen Profile & Password Management ===" -ForegroundColor Cyan
+# 1. Get Profile
+$myProfile = Invoke-RestMethod -Uri "$baseUrl/users/me" -Method Get -Headers $citizenHeaders
+Assert-Equal $myProfile.name "করিম হোসেন" "GET /api/users/me returns citizen profile"
+Assert-Equal ($myProfile.passwordHash -eq $null) $true "passwordHash is hidden from profile response"
+
+# 2. Update Profile
+$updateProfBody = @{
+    name = "করিম হোসেন (আপডেটেড)"
+    address = "গ্রাম: মধ্যপাড়া, ওয়ার্ড: ৩"
+} | ConvertTo-Json
+$updateProfRes = Invoke-RestMethod -Uri "$baseUrl/users/me" -Method Patch -Headers $citizenHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($updateProfBody)) -ContentType "application/json; charset=utf-8"
+Assert-Equal $updateProfRes.user.name "করিম হোসেন (আপডেটেড)" "PATCH /api/users/me updated name"
+
+# 3. Change Password
+$changePassBody = @{
+    oldPassword = "password123"
+    newPassword = "newPassword456"
+} | ConvertTo-Json
+$changePassRes = Invoke-RestMethod -Uri "$baseUrl/users/change-password" -Method Patch -Headers $citizenHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($changePassBody)) -ContentType "application/json; charset=utf-8"
+Assert-Equal $changePassRes.success $true "PATCH /api/users/change-password changed password"
+
+# 4. Login with new password
+$newLoginRes = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes((@{ phoneNumber = $citizenPhone; password = "newPassword456" } | ConvertTo-Json))) -ContentType "application/json; charset=utf-8"
+Assert-Equal ($newLoginRes.access_token -ne $null) $true "Citizen successfully logged in with NEW password"
+
+Write-Host "`n=== TEST 8: Notice Board & Announcements (POST & GET /api/notices) ===" -ForegroundColor Cyan
+# Admin creates urgent electricity notice
+$noticeBody = @{
+    title = "উপজেলা কেন্দ্রীয় ফিডারে জরুরি সংস্কার বিজ্ঞপ্তি $randomId"
+    content = "লাইন মেরামতের জন্য আগামীকাল দুপুর ১২টা থেকে ২টা পর্যন্ত বিদ্যুৎ সরবরাহ বন্ধ থাকবে।"
+    category = "ELECTRICITY"
+    priority = "URGENT"
+    imageUrl = "https://res.cloudinary.com/hhj1x5qm/image/upload/v1794935457/smartupazila/notices/power_cut.jpg"
+} | ConvertTo-Json
+$noticeRes = Invoke-RestMethod -Uri "$baseUrl/notices" -Method Post -Headers $adminHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($noticeBody)) -ContentType "application/json; charset=utf-8"
+Assert-Equal ($noticeRes.id -ne $null) $true "Notice created with ID: $($noticeRes.id)"
+Assert-Equal $noticeRes.priority "URGENT" "Notice priority is URGENT"
+
+# Public views notices
+$publicNotices = Invoke-RestMethod -Uri "$baseUrl/notices?category=ELECTRICITY" -Method Get
+$targetNotice = $publicNotices | Where-Object { $_.id -eq $noticeRes.id }
+Assert-Equal ($targetNotice -ne $null) $true "Public can view created notice under category ELECTRICITY"
+
+Write-Host "`n=== TEST 9: Admin Resets User Password (admin only) ===" -ForegroundColor Cyan
+$resetPassBody = @{
+    newPassword = "adminForcedNewPass789"
+} | ConvertTo-Json
+$resetRes = Invoke-RestMethod -Uri "$baseUrl/admin/users/$($reg.user.id)/reset-password" -Method Patch -Headers $adminHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($resetPassBody)) -ContentType "application/json; charset=utf-8"
+Assert-Equal $resetRes.success $true "Admin reset password successfully"
+
+# Login with admin-reset password
+$adminResetLogin = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes((@{ phoneNumber = $citizenPhone; password = "adminForcedNewPass789" } | ConvertTo-Json))) -ContentType "application/json; charset=utf-8"
+Assert-Equal ($adminResetLogin.access_token -ne $null) $true "Citizen successfully logged in with admin-reset password"
+
+Write-Host "`n🎉 ALL FEATURE TESTS PASSED SUCCESSFULLY! 🎉" -ForegroundColor Green
