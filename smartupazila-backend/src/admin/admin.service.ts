@@ -341,3 +341,88 @@ export class AdminService {
             id: saved.assignedTo.id,
             name: saved.assignedTo.name,
             department: saved.assignedTo.department,
+          }
+        : null,
+      reviewedBy: saved.reviewedBy
+        ? { id: saved.reviewedBy.id, name: saved.reviewedBy.name, role: saved.reviewedBy.role }
+        : null,
+      createdAt: saved.createdAt,
+      updatedAt: saved.updatedAt,
+    };
+  }
+
+  async assignComplaint(id: string, officerId: string) {
+    const complaint = await this.complaintRepo.findOne({
+      where: { id },
+      relations: { assignedTo: true },
+    });
+    if (!complaint) throw new NotFoundException('অভিযোগ পাওয়া যায়নি');
+
+    const officer = await this.userRepo.findOneBy({ id: officerId, role: Role.OFFICER });
+    if (!officer) throw new NotFoundException('নির্ধারিত কর্মকর্তা পাওয়া যায়নি');
+
+    complaint.assignedTo = officer;
+    await this.complaintRepo.save(complaint);
+    return {
+      success: true,
+      message: `অভিযোগটি সফলভাবে কর্মকর্তা ${officer.name}-এর কাছে অ্যাসাইন করা হয়েছে`,
+      complaintId: complaint.id,
+      assignedTo: { id: officer.id, name: officer.name, department: officer.department },
+    };
+  }
+
+  // 5. Dashboard Stats
+  async getStats() {
+    const [
+      totalUsers,
+      pendingApprovals,
+      blockedUsers,
+      totalComplaints,
+      pending,
+      inProgress,
+      resolved,
+      rejected,
+      emergencyCount,
+      donorsCount,
+      foodsCount,
+      placesCount,
+      communityCount,
+      noticesCount,
+    ] = await Promise.all([
+      this.userRepo.count(),
+      this.userRepo.count({ where: { isApproved: false } }),
+      this.userRepo.count({ where: { isActive: false } }),
+      this.complaintRepo.count(),
+      this.complaintRepo.count({ where: { status: Status.PENDING } }),
+      this.complaintRepo.count({ where: { status: Status.IN_PROGRESS } }),
+      this.complaintRepo.count({ where: { status: Status.RESOLVED } }),
+      this.complaintRepo.count({ where: { status: Status.REJECTED } }),
+      this.emergencyRepo.count(),
+      this.donorRepo.count(),
+      this.foodRepo.count(),
+      this.placeRepo.count(),
+      this.communityRepo.count(),
+      this.noticeRepo.count(),
+    ]);
+
+    const byCategory = await this.complaintRepo
+      .createQueryBuilder('c')
+      .select('c.category', 'category')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('c.category')
+      .getRawMany();
+
+    return {
+      users: { total: totalUsers, pendingApprovals, blocked: blockedUsers },
+      complaints: { total: totalComplaints, pending, inProgress, resolved, rejected, byCategory },
+      services: {
+        emergencyContacts: emergencyCount,
+        bloodDonors: donorsCount,
+        foods: foodsCount,
+        places: placesCount,
+        communityListings: communityCount,
+        notices: noticesCount,
+      },
+    };
+  }
+}
