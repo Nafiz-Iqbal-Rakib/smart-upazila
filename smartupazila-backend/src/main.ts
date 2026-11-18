@@ -20,7 +20,7 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('SmartUpazila AI API')
-    .setDescription('MCP & RAG-powered civic backend')
+    .setDescription('Comprehensive AI-driven digital municipality & public service API for Bangladesh Upazilas')
     .setVersion('1.0')
     .addBearerAuth()
     .build();
