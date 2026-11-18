@@ -68,3 +68,39 @@ $citizenPhone = ("016" + (Get-Random -Minimum 1000 -Maximum 9999) + "1234").Subs
 $citizenBody = @{
     name = "করিম হোসেন"
     phoneNumber = $citizenPhone
+    email = "citizen$randomId@test.com"
+    nid = ("199" + (Get-Random -Minimum 1000000 -Maximum 9999999)).Substring(0, 10)
+    address = "গ্রাম: মধ্যপাড়া"
+    password = "password123"
+} | ConvertTo-Json
+
+$reg = Invoke-RestMethod -Uri "$baseUrl/auth/register" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes($citizenBody)) -ContentType "application/json; charset=utf-8"
+Write-Host " Citizen registered: $($reg.user.name)" -ForegroundColor Green
+
+# Approve citizen
+$approveRes = Invoke-RestMethod -Uri "$baseUrl/admin/users/$($reg.user.id)/approve" -Method Patch -Headers $adminHeaders
+Write-Host " Citizen approved by admin" -ForegroundColor Green
+
+# Login citizen
+$citizenAuth = Invoke-RestMethod -Uri "$baseUrl/auth/login" -Method Post -Body ([System.Text.Encoding]::UTF8.GetBytes((@{ phoneNumber = $citizenPhone; password = "password123" } | ConvertTo-Json))) -ContentType "application/json; charset=utf-8"
+$citizenHeaders = @{ Authorization = "Bearer $($citizenAuth.access_token)" }
+
+# Submit complaint
+$complaintBody = @{
+    category = "road"
+    description = "মেইন রোডের কালভার্ট ভেঙে গিয়ে যানবাহন চলাচল বন্ধ রয়েছে"
+    imageUrl = "https://res.cloudinary.com/hhj1x5qm/image/upload/v1794935457/smartupazila/complaints/broken_bridge.jpg"
+} | ConvertTo-Json
+
+$complaintRes = Invoke-RestMethod -Uri "$baseUrl/complaints" -Method Post -Headers $citizenHeaders -Body ([System.Text.Encoding]::UTF8.GetBytes($complaintBody)) -ContentType "application/json; charset=utf-8"
+$trackingId = $complaintRes.trackingId
+Assert-Equal ($trackingId -ne $null) $true "Complaint submitted, Tracking ID: $trackingId"
+Assert-Equal $complaintRes.department "ROAD" "AI Router successfully routed to ROAD department"
+
+Write-Host "`n=== TEST 5: Admin Updates Complaint Status with Official Remark ===" -ForegroundColor Cyan
+# Find complaint ID
+$allComplaints = Invoke-RestMethod -Uri "$baseUrl/admin/complaints" -Method Get -Headers $adminHeaders
+$targetComplaint = $allComplaints.items | Where-Object { $_.trackingId -eq $trackingId }
+
+$updateBody = @{
+    status = "IN_PROGRESS"
