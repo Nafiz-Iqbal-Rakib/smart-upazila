@@ -189,3 +189,50 @@ async function seed() {
     ]);
     console.log('✅ Places seeded.');
   }
+
+  // 6. 🏫 Community
+  if ((await communityRepo.count()) === 0) {
+    await communityRepo.save([
+      communityRepo.create({ name: 'উপজেলা সরকারি মডেল উচ্চ বিদ্যালয়', type: ListingType.SCHOOL, address: 'শহীদ মিনার রোড' }),
+      communityRepo.create({ name: 'সরকারি মহিলা কলেজ', type: ListingType.COLLEGE, address: 'কলেজ গেট' }),
+      communityRepo.create({ name: 'স্থানীয় পাবলিক লাইব্রেরি', type: ListingType.FACILITY, address: 'নতুন বাজার' }),
+    ]);
+    console.log('✅ Community listings seeded.');
+  }
+
+  // 7. 📢 Notices
+  if ((await noticeRepo.count()) === 0) {
+    await noticeRepo.save([
+      noticeRepo.create({
+        title: 'লাইন সংস্কারের জন্য আগামী শনিবার সাময়িক বিদ্যুৎ বিভ্রাট',
+        content: 'উপজেলা কেন্দ্রীয় ৩৩/১১ কেভি সাব-স্টেশনের জরুরি রক্ষণাবেক্ষণ কাজের জন্য আগামী শনিবার সকাল ৮টা থেকে দুপুর ১টা পর্যন্ত সদর ও বাজার এলাকায় বিদ্যুৎ সরবরাহ বন্ধ থাকবে।',
+        category: NoticeCategory.ELECTRICITY,
+        priority: NoticePriority.URGENT,
+        createdBy: admin,
+      }),
+      noticeRepo.create({
+        title: 'উপজেলা স্বাস্থ্য কমপ্লেক্সে বিনামূল্যে চক্ষু ও ডায়াবেটিস ক্যাম্পেইন',
+        content: 'আগামী সোমবার সকাল ৯টা থেকে উপজেলা স্বাস্থ্য কমপ্লেক্স প্রাঙ্গণে বিশেষজ্ঞ ডাক্তার দ্বারা বিনামূল্যে চিকিৎসা সেবা ও ওষুধ বিতরণ করা হবে।',
+        category: NoticeCategory.HEALTH,
+        priority: NoticePriority.NORMAL,
+        createdBy: admin,
+      }),
+      noticeRepo.create({
+        title: 'চলতি মৌসুমে রবি শস্যের প্রণোদনার সার ও বীজ বিতরণ বিজ্ঞপ্তি',
+        content: 'উপজেলা কৃষি সম্প্রসারণ অধিদপ্তরের উদ্যোগে ক্ষুদ্র ও প্রান্তিক কৃষকদের মাঝে রবি শস্যের সার ও বীজ বিতরণ শুরু হয়েছে। সংশ্লিষ্ট ইউনিয়ন পরিষদ থেকে তালিকা সংগ্রহ করুন।',
+        category: NoticeCategory.AGRICULTURE,
+        priority: NoticePriority.NORMAL,
+        createdBy: admin,
+      }),
+    ]);
+    console.log('✅ Notices seeded.');
+  }
+
+  console.log('🎉 Seed complete!');
+  await dataSource.destroy();
+}
+
+seed().catch((e) => {
+  console.error('❌ Seed failed:', e);
+  process.exit(1);
+});
