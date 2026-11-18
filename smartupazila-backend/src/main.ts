@@ -20,3 +20,14 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('SmartUpazila AI API')
+    .setDescription('Comprehensive AI-driven digital municipality & public service API for Bangladesh Upazilas')
+    .setVersion('1.0')
+    .addBearerAuth()
+    .build();
+  const doc = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api/docs', app, doc);
+
+  const port = process.env.PORT || 3000;
+  await app.listen(port, '0.0.0.0');
+}
+void bootstrap();
