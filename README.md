@@ -96,3 +96,101 @@ npm install
 NODE_ENV=development
 PORT=3000
 CORS_ORIGIN=http://localhost:3001
+JWT_SECRET=your_super_secret_jwt_key_here
+
+# Option 1: Neon Cloud PostgreSQL (Render ও ক্লাউডের জন্য রিকমেন্ডেড)
+DATABASE_URL=postgresql://USER:PASSWORD@ep-xxxx-pooler.region.aws.neon.tech/neondb?sslmode=require
+DB_SSL=true
+
+# Option 2: Local PostgreSQL Fallback
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_NAME=smartupazila_db
+
+# Cloudinary Credentials (ছবি আপলোডের জন্য)
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+# Google Gemini AI (অভিযোগ রাউটিং ও চ্যাটবটের জন্য)
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.5-flash
+```
+
+### ৩. ডাটাবেজ সিডিং (Seed Initial Data)
+ডিফল্ট সুপারঅ্যাডমিন, কর্মকর্তা, ডেমো অভিযোগ, জরুরি নম্বর এবং নোটিশ স্বয়ংক্রিয়ভাবে ডাটাবেজে ইনসার্ট করতে:
+
+```bash
+npm run seed
+```
+
+> **ডিফল্ট সুপারঅ্যাডমিন লগইন:**  
+> - **Phone:** `01700000000`  
+> - **Password:** `Admin@123`  
+
+### ৪. সার্ভার চালু করুন (Run Application)
+```bash
+# ডেভেলপমেন্ট মোডে চালু করতে:
+npm run start:dev
+
+# প্রোডাকশন বিল্ড ও রান করতে:
+npm run build
+npm run start:prod
+```
+
+সার্ভার সফলভাবে চালু হলে কনসোলে দেখাবে:
+```
+Server running on http://localhost:3000
+Swagger Docs available at http://localhost:3000/api/docs
+```
+
+---
+
+## 📚 এপিআই ডকুমেন্টেশন (API Documentation)
+
+সার্ভার চালু করার পর ব্রাউজারে নিচের ইউআরএলে প্রবেশ করলেই সম্পূর্ণ ইন্টারেক্টিভ Swagger UI পাওয়া যাবে:
+
+👉 **[http://localhost:3000/api/docs](http://localhost:3000/api/docs)**
+
+### প্রধান এপিআই এন্ডপয়েন্টসমূহ (Core Endpoints):
+
+| মডিউল | মেথড | এন্ডপয়েন্ট | বিবরণ |
+|---|---|---|---|
+| **Health Check** | `GET` | `/api` | সার্ভার ও সিস্টেমের রিয়েলটাইম স্ট্যাটাস |
+| **Auth** | `POST` | `/api/auth/register` | নতুন নাগরিক রেজিস্ট্রেশন |
+| **Auth** | `POST` | `/api/auth/login` | মোবাইল নম্বর ও পাসওয়ার্ড দিয়ে লগইন |
+| **Users** | `GET` | `/api/users/me` | প্রোফাইল তথ্য দেখা |
+| **Users** | `PATCH`| `/api/users/me` | প্রোফাইল তথ্য ও ছবি আপডেট |
+| **Complaints** | `POST` | `/api/complaints` | ছবিসহ নতুন অভিযোগ দাখিল (AI Auto-Routing) |
+| **Complaints** | `GET` | `/api/complaints` | আমার দাখিলকৃত অভিযোগসমূহ |
+| **AI Assistant**| `POST` | `/api/ai/chat` | এআই নাগরিক সহকারীর সাথে বাংলা চ্যাট |
+| **Admin** | `GET` | `/api/admin/pending-users` | অনুমোদনের অপেক্ষায় থাকা নাগরিক তালিকা |
+| **Admin** | `PATCH`| `/api/admin/users/:id/approve` | নাগরিক একাউন্ট অনুমোদন প্রদান |
+| **Admin** | `POST` | `/api/admin/staff` | নতুন কর্মকর্তা বা সাব-অ্যাডমিন তৈরি |
+| **Notices** | `GET` | `/api/notices` | প্রকাশিত গণবিজ্ঞপ্তি ও নোটিশ তালিকা |
+| **Emergency** | `GET` | `/api/emergency` | উপজেলা জরুরি সেবাসমূহ |
+| **Blood Donors**| `GET`| `/api/blood-donors` | রক্তদাতা অনুসন্ধান ও ফিল্টারিং |
+| **Places & Foods**| `GET`| `/api/places`, `/api/foods`| পর্যটন স্থান ও ঐতিহ্যবাহী খাবার |
+
+---
+
+## 🛡️ নিরাপত্তা ও ডেটা ইন্টিগ্রিটি (Security & Validation)
+
+- **JWT Authentication:** প্রতিটি প্রোটেক্টেড এন্ডপয়েন্ট বিয়ারার টোকেনের মাধ্যমে সুরক্ষিত।
+- **ডাটাবেজ রোলব্যাক (Transactions):** PostgreSQL এবং TypeORM ট্রানজাকশন ফেইলিওরে স্বয়ংক্রিয় রোলব্যাক নিশ্চিত করে, ফলে কোনো ডুপ্লিকেট বা করাপ্টেড ডাটা ইনসার্ট হতে পারে না।
+- **Cloudinary Signed URLs:** নাগরিকের ব্যক্তিগত ছবি ও অভিযোগের সংবেদনশীল ফাইলসমূহ প্রাইভেট রাখা হয় এবং নির্দিষ্ট সময়ের মেয়াদে সুরক্ষিত সাইনড ইউআরএল তৈরি হয়।
+
+---
+
+## 👥 প্রজেক্ট টিম ও কন্ট্রিবিউটর (Contributors)
+
+- **Nafiz Iqbal Rakib** ([@Nafiz-Iqbal-Rakib](https://github.com/Nafiz-Iqbal-Rakib)) - *Project Lead & Backend Architect*
+- **Fahad Al Noor** ([@fahadalnoor7007](https://github.com/fahadalnoor7007)) - *Full Stack Developer & AI Integration Specialist*
+
+---
+
+## 📄 লাইসেন্স (License)
+
+This project is licensed under the **MIT License**.
