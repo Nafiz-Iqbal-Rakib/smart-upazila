@@ -63,3 +63,69 @@
 | উপাদান | প্রযুক্তি |
 |---|---|
 | **Backend Framework** | [NestJS](https://nestjs.com/) (Node.js & TypeScript) |
+| **Database** | PostgreSQL ([Neon Serverless](https://neon.tech/) & Local PostgreSQL) |
+| **ORM** | [TypeORM](https://typeorm.io/) |
+| **Artificial Intelligence** | [Google Gemini 3.5 Flash](https://ai.google.dev/) |
+| **Media & File Storage** | [Cloudinary](https://cloudinary.com/) (Private & Public Storage) |
+| **Authentication** | JWT (JSON Web Tokens) & Bcrypt Password Hashing |
+| **Validation** | Class-Validator & Class-Transformer |
+| **API Documentation** | Swagger (OpenAPI 3.0) |
+| **Cloud Hosting** | [Render](https://render.com/) |
+
+---
+
+## 🚀 সেটআপ ও ইনস্টলেশন (Getting Started)
+
+### পূর্বশর্ত (Prerequisites)
+- [Node.js](https://nodejs.org/) (v18 বা তদূর্ধ্ব)
+- [PostgreSQL](https://www.postgresql.org/) (লোকাল) অথবা [Neon](https://neon.tech/) ক্লাউড একাউন্ট
+- Cloudinary একাউন্ট ও API Credentials
+- Google Gemini AI API Key
+
+### ১. ক্লোন ও ডিপেন্ডেন্সি ইনস্টল
+```bash
+git clone https://github.com/Nafiz-Iqbal-Rakib/smart-upazila.git
+cd smart-upazila/smartupazila-backend
+npm install
+```
+
+### ২. এনভায়রনমেন্ট কনফিগারেশন (.env)
+`smartupazila-backend/` ফোল্ডারে `.env.example` ফাইলটি কপি করে `.env` তৈরি করুন:
+
+```env
+NODE_ENV=development
+PORT=3000
+CORS_ORIGIN=http://localhost:3001
+JWT_SECRET=your_super_secret_jwt_key_here
+
+# Option 1: Neon Cloud PostgreSQL (Render ও ক্লাউডের জন্য রিকমেন্ডেড)
+DATABASE_URL=postgresql://USER:PASSWORD@ep-xxxx-pooler.region.aws.neon.tech/neondb?sslmode=require
+DB_SSL=true
+
+# Option 2: Local PostgreSQL Fallback
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_NAME=smartupazila_db
+
+# Cloudinary Credentials (ছবি আপলোডের জন্য)
+CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+# Google Gemini AI (অভিযোগ রাউটিং ও চ্যাটবটের জন্য)
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3.5-flash
+```
+
+### ৩. ডাটাবেজ সিডিং (Seed Initial Data)
+ডিফল্ট সুপারঅ্যাডমিন, কর্মকর্তা, ডেমো অভিযোগ, জরুরি নম্বর এবং নোটিশ স্বয়ংক্রিয়ভাবে ডাটাবেজে ইনসার্ট করতে:
+
+```bash
+npm run seed
+```
+
+> **ডিফল্ট সুপারঅ্যাডমিন লগইন:**  
+> - **Phone:** `01700000000`  
+> - **Password:** `Admin@123`  
