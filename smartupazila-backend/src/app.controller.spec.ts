@@ -15,8 +15,11 @@ describe('AppController', () => {
   });
 
   describe('root', () => {
-    it('should return "Hello World!"', () => {
-      expect(appController.getHello()).toBe('Hello World!');
+    it('should return API health status object', () => {
+      const res = appController.getHello();
+      expect(res.status).toBe('ok');
+      expect(res.service).toBe('Smart Upazila AI API');
+      expect(res.docs).toBe('/api/docs');
     });
   });
 });
