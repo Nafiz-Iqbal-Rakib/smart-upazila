@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -17,6 +17,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { UsersModule } from './users/users.module';
 import { NoticesModule } from './notices/notices.module';
 import { Notice } from './notices/notice.entity';
+import { HttpLoggerMiddleware } from './common/middleware/http-logger.middleware';
 
 import { User } from './users/user.entity';
 import { Complaint } from './complaints/complaint.entity';
@@ -86,4 +87,8 @@ import { CommunityListing } from './community/community-listing.entity';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(HttpLoggerMiddleware).forRoutes('*');
+  }
+}
