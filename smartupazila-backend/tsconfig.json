@@ -14,7 +14,8 @@
     "strict": false,
     "types": [
       "node",
-      "multer"
+      "multer",
+      "vitest/globals"
     ]
   }
 }
