@@ -21,8 +21,8 @@ export class ComplaintsService {
   async create(userId: string, dto: CreateComplaintDto, imagePublicId?: string) {
     const trackingId = this.generateTrackingId();
 
-    // 1. AI Classification of Department & Urgency
-    const classification = await this.aiRouter.classifyComplaint(dto.category, dto.description);
+    // 1. AI Classification of Category, Department & Urgency
+    const classification = await this.aiRouter.classifyComplaint(dto.description, dto.category);
 
     // 2. Department officer assignment (least workload)
     let assignedOfficer: User | null = null;
@@ -52,7 +52,7 @@ export class ComplaintsService {
     }
 
     const complaint = this.repo.create({
-      category: dto.category,
+      category: dto.category || classification.category,
       description: dto.description,
       imageUrl: imagePublicId ? null : dto.imageUrl || null,
       imagePublicId: imagePublicId || null,
@@ -69,6 +69,7 @@ export class ComplaintsService {
       message: 'অভিযোগ জমা হয়েছে ✅',
       trackingId: saved.trackingId,
       status: saved.status,
+      category: saved.category,
       department: saved.department,
       urgency: saved.urgency,
       assignedOfficer: assignedOfficer
