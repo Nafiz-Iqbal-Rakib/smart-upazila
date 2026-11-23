@@ -89,6 +89,26 @@ export class AiAssistantService {
       },
     },
     {
+      name: 'submit_complaint',
+      description:
+        'নাগরিকের কোনো নাগরিক সমস্যা, অবকাঠামোগত সমস্যা বা জরুরি অভিযোগ থাকলে সরাসরি সিস্টেমে অভিযোগ (Complaint) দায়ের করার টুল। যখন নাগরিক সমস্যা জানায় বা অভিযোগ জমা দিতে বলে, তখন এই টুল কল করতে হবে।',
+      allowedRoles: 'ALL',
+      parameters: {
+        type: 'OBJECT',
+        properties: {
+          description: {
+            type: 'STRING',
+            description: 'সমস্যার বিস্তারিত বিবরণ',
+          },
+          category: {
+            type: 'STRING',
+            description: 'সমস্যার ধরন বা ক্যাটাগরি (ঐচ্ছিক)',
+          },
+        },
+        required: ['description'],
+      },
+    },
+    {
       name: 'update_complaint_status',
       description: 'অভিযোগের স্ট্যাটাস পরিবর্তন করার টুল (শুধুমাত্র সংশ্লিষ্ট কর্মকর্তা বা অ্যাডমিন)।',
       allowedRoles: [Role.OFFICER, Role.ADMIN],
@@ -153,6 +173,28 @@ export class AiAssistantService {
 
       case 'track_complaint':
         return this.complaintsService.findByTrackingId(args?.trackingId, user);
+
+      case 'submit_complaint': {
+        if (!user || !user.userId) {
+          return {
+            status: 'AUTH_REQUIRED',
+            message: 'অভিযোগ আনুষ্ঠানিকভাবে সিস্টেমে রেকর্ড করার জন্য অনুগ্রহ করে আগে সিস্টেমে লগইন করুন।',
+          };
+        }
+        const created = await this.complaintsService.create(user.userId, {
+          description: args?.description || '',
+          category: args?.category,
+        });
+        return {
+          status: 'SUCCESS',
+          message: 'আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে ✅',
+          trackingId: created.trackingId,
+          category: created.category,
+          department: created.department,
+          urgency: created.urgency,
+          assignedOfficer: created.assignedOfficer,
+        };
+      }
 
       case 'update_complaint_status':
         if (!user) throw new ForbiddenException('লগইন করা আবশ্যক');
@@ -225,8 +267,17 @@ export class AiAssistantService {
       const toolResult = await this.executeTool(toolName, toolArgs, user);
 
       // Return structured response with tool output
+      let reply = `এআই সহকারী '${toolName}' টুল এক্সিকিউট করে তথ্য খুঁজে পেয়েছে।`;
+      if (toolName === 'submit_complaint') {
+        const res = toolResult as any;
+        reply =
+          res?.status === 'SUCCESS'
+            ? `আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে ✅ ট্র্যাকিং আইডি: ${res.trackingId} (বিভাগ: ${res.department}, দায়িত্বপ্রাপ্ত কর্মকর্তা: ${res.assignedOfficer})`
+            : res?.message || 'অভিযোগ প্রক্রিয়াকরণ সম্পন্ন হয়েছে।';
+      }
+
       return {
-        reply: `এআই সহকারী '${toolName}' টুল এক্সিকিউট করে তথ্য খুঁজে পেয়েছে।`,
+        reply,
         toolUsed: toolName,
         toolArgs,
         data: toolResult,
@@ -246,6 +297,36 @@ export class AiAssistantService {
     user?: { userId: string; role: Role },
   ) {
     const text = message.toLowerCase();
+
+    // 0. Check for submitting a complaint via chat
+    if (
+      /অভিযোগ|সমস্যা|নষ্ট|ভেঙে গেছে|পানি জমে|বিদ্যুৎ নাই|ড্রেন|কালভার্ট|complaint|complain|report/i.test(
+        text,
+      ) &&
+      /জমা|করুন|দাও|করব|দায়ের|submit|file|register|লজ/i.test(text) &&
+      tools.some((t) => t.name === 'submit_complaint')
+    ) {
+      if (!user || !user.userId) {
+        return {
+          reply:
+            'অভিযোগ আনুষ্ঠানিকভাবে সিস্টেমে রেকর্ড করার জন্য অনুগ্রহ করে আগে সিস্টেমে লগইন করুন।',
+          toolUsed: 'submit_complaint',
+          toolArgs: {},
+          data: { status: 'AUTH_REQUIRED' },
+        };
+      }
+      const result: any = await this.executeTool(
+        'submit_complaint',
+        { description: message },
+        user,
+      );
+      return {
+        reply: `আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে ✅ ট্র্যাকিং আইডি: ${result.trackingId} (বিভাগ: ${result.department}, দায়িত্বপ্রাপ্ত কর্মকর্তা: ${result.assignedOfficer})`,
+        toolUsed: 'submit_complaint',
+        toolArgs: { description: message },
+        data: result,
+      };
+    }
 
     // 1. Check for tracking ID
     const trackingMatch = message.match(/SUZ-[A-Z0-9]{6}/i);
