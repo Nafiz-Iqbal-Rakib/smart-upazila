@@ -14,12 +14,12 @@ export class ComplaintsService {
     private repo: Repository<Complaint>,
     private aiRouter: AiRouterService,
     private cloudinaryService: CloudinaryService,
-  ) {}
+  ) { }
 
   async create(userId: string, dto: CreateComplaintDto, imagePublicId?: string) {
     const trackingId = this.generateTrackingId();
 
-    // AI: শুধু ক্যাটাগরি, বিভাগ ও তীব্রতা নির্ধারণ করে — অফিসার অ্যাসাইন করে না
+
     const classification = await this.aiRouter.classifyComplaint(dto.description, dto.category);
 
     const complaint = this.repo.create({
@@ -30,14 +30,14 @@ export class ComplaintsService {
       trackingId,
       department: classification.department,
       urgency: classification.urgency,
-      assignedTo: null, // Admin ড্যাশবোর্ড থেকে পরে অফিসার অ্যাসাইন করবেন
+      assignedTo: null,
       user: { id: userId },
     });
 
     const saved = await this.repo.save(complaint);
 
     return {
-      message: 'অভিযোগ জমা হয়েছে ✅',
+      message: 'অভিযোগ জমা হয়েছে ',
       trackingId: saved.trackingId,
       status: saved.status,
       category: saved.category,
@@ -102,9 +102,9 @@ export class ComplaintsService {
 
     const canViewPrivateImage = Boolean(
       requestingUser &&
-        (requestingUser.role === Role.ADMIN ||
-          requestingUser.userId === complaint.user?.id ||
-          requestingUser.userId === complaint.assignedTo?.id),
+      (requestingUser.role === Role.ADMIN ||
+        requestingUser.userId === complaint.user?.id ||
+        requestingUser.userId === complaint.assignedTo?.id),
     );
 
     return this.withResolvedImageUrl(complaint, canViewPrivateImage);
@@ -126,9 +126,9 @@ export class ComplaintsService {
     };
   }
 
-  // যেমন: SUZ-7F3K2M
+
   private generateTrackingId(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // 0,O,1,I বাদ (confusion এড়াতে)
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     let code = '';
     for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
