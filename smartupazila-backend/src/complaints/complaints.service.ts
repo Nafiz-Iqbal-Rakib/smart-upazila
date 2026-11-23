@@ -1,9 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
-import { Complaint, Status } from './complaint.entity';
+import { Repository } from 'typeorm';
+import { Complaint } from './complaint.entity';
 import { CreateComplaintDto } from './dto/create-complaint.dto';
-import { Role, User } from '../users/user.entity';
+import { Role } from '../users/user.entity';
 import { AiRouterService } from '../ai/ai-router.service';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 
@@ -12,8 +12,6 @@ export class ComplaintsService {
   constructor(
     @InjectRepository(Complaint)
     private repo: Repository<Complaint>,
-    @InjectRepository(User)
-    private userRepo: Repository<User>,
     private aiRouter: AiRouterService,
     private cloudinaryService: CloudinaryService,
   ) {}
@@ -21,35 +19,8 @@ export class ComplaintsService {
   async create(userId: string, dto: CreateComplaintDto, imagePublicId?: string) {
     const trackingId = this.generateTrackingId();
 
-    // 1. AI Classification of Category, Department & Urgency
+    // AI: শুধু ক্যাটাগরি, বিভাগ ও তীব্রতা নির্ধারণ করে — অফিসার অ্যাসাইন করে না
     const classification = await this.aiRouter.classifyComplaint(dto.description, dto.category);
-
-    // 2. Department officer assignment (least workload)
-    let assignedOfficer: User | null = null;
-    const officers = await this.userRepo.find({
-      where: {
-        role: Role.OFFICER,
-        department: classification.department,
-        isActive: true,
-        isApproved: true,
-      },
-    });
-
-    if (officers.length > 0) {
-      let minWorkload = Infinity;
-      for (const officer of officers) {
-        const count = await this.repo.count({
-          where: {
-            assignedTo: { id: officer.id },
-            status: In([Status.PENDING, Status.IN_PROGRESS]),
-          },
-        });
-        if (count < minWorkload) {
-          minWorkload = count;
-          assignedOfficer = officer;
-        }
-      }
-    }
 
     const complaint = this.repo.create({
       category: dto.category || classification.category,
@@ -59,7 +30,7 @@ export class ComplaintsService {
       trackingId,
       department: classification.department,
       urgency: classification.urgency,
-      assignedTo: assignedOfficer,
+      assignedTo: null, // Admin ড্যাশবোর্ড থেকে পরে অফিসার অ্যাসাইন করবেন
       user: { id: userId },
     });
 
@@ -72,9 +43,7 @@ export class ComplaintsService {
       category: saved.category,
       department: saved.department,
       urgency: saved.urgency,
-      assignedOfficer: assignedOfficer
-        ? `${assignedOfficer.name} (${saved.department} বিভাগ)`
-        : 'অপেক্ষারত (অ্যাডমিন পর্যালোচনা)',
+      assignedOfficer: null,
     };
   }
 
