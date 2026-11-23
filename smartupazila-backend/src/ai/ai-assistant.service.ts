@@ -5,9 +5,7 @@ import { BloodDonorsService } from '../blood-donors/blood-donors.service';
 import { FoodsService } from '../foods/foods.service';
 import { PlacesService } from '../places/places.service';
 import { ComplaintsService } from '../complaints/complaints.service';
-import { AdminService } from '../admin/admin.service';
 import { Role } from '../users/user.entity';
-import { Status } from '../complaints/complaint.entity';
 import { BloodGroup } from '../blood-donors/blood-donor.entity';
 import { PlaceCategory } from '../places/place.entity';
 
@@ -108,19 +106,6 @@ export class AiAssistantService {
         required: ['description'],
       },
     },
-    {
-      name: 'update_complaint_status',
-      description: 'অভিযোগের স্ট্যাটাস পরিবর্তন করার টুল (শুধুমাত্র সংশ্লিষ্ট কর্মকর্তা বা অ্যাডমিন)।',
-      allowedRoles: [Role.OFFICER, Role.ADMIN],
-      parameters: {
-        type: 'OBJECT',
-        properties: {
-          complaintId: { type: 'STRING', description: 'অভিযোগের UUID' },
-          status: { type: 'STRING', description: 'PENDING, IN_PROGRESS, RESOLVED, REJECTED' },
-        },
-        required: ['complaintId', 'status'],
-      },
-    },
   ];
 
   constructor(
@@ -130,7 +115,6 @@ export class AiAssistantService {
     private foodsService: FoodsService,
     private placesService: PlacesService,
     private complaintsService: ComplaintsService,
-    private adminService: AdminService,
   ) {}
 
   // Get tools permitted for current user role
@@ -195,14 +179,6 @@ export class AiAssistantService {
           assignedOfficer: created.assignedOfficer,
         };
       }
-
-      case 'update_complaint_status':
-        if (!user) throw new ForbiddenException('লগইন করা আবশ্যক');
-        return this.adminService.updateComplaintStatus(
-          args.complaintId,
-          user.userId,
-          args.status as Status,
-        );
 
       default:
         throw new Error(`টুল ইমপ্লিমেন্টেশন পাওয়া যায়নি: ${name}`);

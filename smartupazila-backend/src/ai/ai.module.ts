@@ -10,7 +10,6 @@ import { BloodDonorsModule } from '../blood-donors/blood-donors.module';
 import { FoodsModule } from '../foods/foods.module';
 import { PlacesModule } from '../places/places.module';
 import { ComplaintsModule } from '../complaints/complaints.module';
-import { AdminModule } from '../admin/admin.module';
 import { User } from '../users/user.entity';
 
 @Module({
@@ -24,7 +23,6 @@ import { User } from '../users/user.entity';
     FoodsModule,
     PlacesModule,
     ComplaintsModule,
-    AdminModule,
   ],
   controllers: [AiController],
   providers: [AiAssistantService],
