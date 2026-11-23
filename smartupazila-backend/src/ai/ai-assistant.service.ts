@@ -115,7 +115,7 @@ export class AiAssistantService {
     private foodsService: FoodsService,
     private placesService: PlacesService,
     private complaintsService: ComplaintsService,
-  ) {}
+  ) { }
 
   // Get tools permitted for current user role
   getPermittedTools(userRole?: Role): ToolDefinition[] {
@@ -171,7 +171,7 @@ export class AiAssistantService {
         });
         return {
           status: 'SUCCESS',
-          message: 'আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে ✅',
+          message: 'আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে',
           trackingId: created.trackingId,
           category: created.category,
           department: created.department,
@@ -247,7 +247,7 @@ export class AiAssistantService {
         const res = toolResult as any;
         reply =
           res?.status === 'SUCCESS'
-            ? `আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে ✅ ট্র্যাকিং আইডি: ${res.trackingId} — বিভাগ: ${res.department} (${res.urgency}) — অ্যাডমিন শীঘ্রই অফিসার নির্ধারণ করবেন।`
+            ? `আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে ✅ ট্র্যাকিং আইডি: ${res.trackingId} (বিভাগ: ${res.department}, দায়িত্বপ্রাপ্ত কর্মকর্তা: ${res.assignedOfficer})`
             : res?.message || 'অভিযোগ প্রক্রিয়াকরণ সম্পন্ন হয়েছে।';
       }
 
@@ -296,7 +296,7 @@ export class AiAssistantService {
         user,
       );
       return {
-        reply: `আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে ✅ ট্র্যাকিং আইডি: ${result.trackingId} — বিভাগ: ${result.department} (${result.urgency}) — অ্যাডমিন শীঘ্রই অফিসার নির্ধারণ করবেন।`,
+        reply: `আপনার অভিযোগটি সফলভাবে সিস্টেমে রেকর্ড করা হয়েছে ✅ ট্র্যাকিং আইডি: ${result.trackingId} (বিভাগ: ${result.department}, দায়িত্বপ্রাপ্ত কর্মকর্তা: ${result.assignedOfficer})`,
         toolUsed: 'submit_complaint',
         toolArgs: { description: message },
         data: result,
